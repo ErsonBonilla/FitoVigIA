@@ -1,0 +1,74 @@
+name: FitoVigIA DevSecOps & CI/CD (OWASP / ASVS / Gitleaks)
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  gitleaks-secret-scan:
+    name: "1. Secret Scanning (Gitleaks)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repositorio completo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ejecutar Gitleaks con reglas FitoVigIA
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  backend-sast-sca:
+    name: "2. Backend SAST & Linting (Ruff + Bandit)"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instalar uv y Python 3.12
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+
+      - name: Instalar herramientas SAST ligeras
+        run: uv pip install --system ruff "bandit[toml]"
+
+      - name: Ejecutar Ruff Security Linter (flake8-bandit rules)
+        run: ruff check api core services workers main.py
+
+      - name: Ejecutar Bandit SAST (PyCQA Security Scanner)
+        run: bandit -c pyproject.toml -r api core services workers main.py
+
+  frontend-deno-security:
+    name: "3. Portal Web Deno SSR (Lint + TypeCheck + OWASP Tests)"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Ejecutar Deno Lint y Type Check
+        run: |
+          deno task lint
+          deno task check
+
+      - name: Ejecutar Suite de Pruebas SSR y Cabeceras OWASP
+        run: deno task test

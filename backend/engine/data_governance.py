@@ -193,7 +193,7 @@ def construir_manifiesto_spark(dir_dron: Path = DIR_CURADO_DRON):
     from pyspark.sql import functions as F
 
     spark = (
-        SparkSession.builder.appName("PlagIA_Gobernanza_Datos")
+        SparkSession.builder.appName("FitoVigIA_Gobernanza_Datos")
         .config("spark.driver.memory", "2g")
         .getOrCreate()
     )

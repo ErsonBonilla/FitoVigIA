@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Sistema de Diseño Cromático y Accesibilidad Visual (WCAG AA > 4.5:1) para PlagIA.
+/// Sistema de Diseño Cromático y Accesibilidad Visual (WCAG AA > 4.5:1) para FitoVigIA.
 ///
 /// Diseñado para operación en campo bajo luz solar intensa en el Tolima y análisis
 /// de mapas de calor Grad-CAM sin superposición verde sobre el follaje del arroz.

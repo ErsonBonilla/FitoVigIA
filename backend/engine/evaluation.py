@@ -93,7 +93,7 @@ def guardar_grafica_matriz_confusion(
     fig, ax = plt.subplots(figsize=(7, 6))
     disp = ConfusionMatrixDisplay(confusion_matrix=mc, display_labels=nombres_clases)
     disp.plot(ax=ax, cmap="Greens", colorbar=False, xticks_rotation=30)
-    ax.set_title("Matriz de Confusión Fitosanitaria - PlagIA Tolima")
+    ax.set_title("Matriz de Confusión Fitosanitaria - FitoVigIA Tolima")
     ax.set_xlabel("Etiqueta Predicha")
     ax.set_ylabel("Etiqueta Real")
     fig.tight_layout()
@@ -123,7 +123,7 @@ def guardar_grafica_roc_multiclase(
         ax.plot(fpr, tpr, lw=1.8, label=nombre_cls)
 
     ax.plot([0, 1], [0, 1], linestyle="--", color="gray", label="Azar (0.50)")
-    ax.set_title("Curvas ROC Multiclase (Uno-contra-Resto) - PlagIA")
+    ax.set_title("Curvas ROC Multiclase (Uno-contra-Resto) - FitoVigIA")
     ax.set_xlabel("Tasa de Falsos Positivos (FPR)")
     ax.set_ylabel("Sensibilidad Fitosanitaria (Recall)")
     ax.legend(loc="lower right", fontsize=8)

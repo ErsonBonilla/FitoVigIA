@@ -1,9 +1,10 @@
 {
-  "raiz_dataset": "C:\\Users\\erson\\Documents\\Programación\\ISIDEAD\\PlagIA\\dataset",
-  "estado_estructura": "CONSOLIDADO_RAIZ_REGLA_DE_ORO",
+  "raiz_dataset": "C:\\Users\\erson\\Documents\\Programación\\Proyectos\\ISIDEAD\\PlagIA\\backend\\dataset",
+  "estado_estructura": "CONSOLIDADO_RAIZ_REGLA_DE_ORO_Y_GOBERNANZA_GLOCAL",
+  "advertencia_origen_datos": "Los dominios 01, 02 y 03 provienen de repositorios libres de internet (ORIGEN_PREENTRENAMIENTO_PUBLICO) para pre-entrenamiento base. El dominio 04_tolima_real_isidead está reservado para la recolección local real en Ibagué, Saldaña y El Espinal.",
   "carpetas_antiguas_eliminadas": [
     "_archivo_crudo",
-    "_plagia_curado",
+    "_fitovigia_curado",
     "Paddy Doctor - Paddy Disease Classification",
     "pest",
     "Rice crop diseases drone captured dataset",
@@ -39,7 +40,8 @@
       "suelo_desnudo"
     ],
     "grupos_con_fuga": 0,
-    "ruta_manifiesto": "C:\\Users\\erson\\Documents\\Programación\\ISIDEAD\\PlagIA\\dataset\\01_dron_dosel_cls\\manifiesto_dron_curado.csv",
+    "origen_datos": "PREENTRENAMIENTO_REPOSITORIO_ABIERTO_INTERNET",
+    "ruta_manifiesto": "C:\\Users\\erson\\Documents\\Programación\\Proyectos\\ISIDEAD\\PlagIA\\backend\\dataset\\01_dron_dosel_cls\\manifiesto_dron_curado.csv",
     "distribucion": {
       "roya_amarilla": {
         "entrenamiento": 855,
@@ -80,7 +82,8 @@
       "dano_insecto_foliar"
     ],
     "grupos_con_fuga": 0,
-    "ruta_manifiesto": "C:\\Users\\erson\\Documents\\Programación\\ISIDEAD\\PlagIA\\dataset\\02_campo_hoja_cls\\manifiesto_campo_hoja_curado.csv",
+    "origen_datos": "PREENTRENAMIENTO_REPOSITORIO_ABIERTO_INTERNET",
+    "ruta_manifiesto": "C:\\Users\\erson\\Documents\\Programación\\Proyectos\\ISIDEAD\\PlagIA\\backend\\dataset\\02_campo_hoja_cls\\manifiesto_campo_hoja_curado.csv",
     "totales_por_clase": {
       "piricularia": 3361,
       "virosis_tungro": 2626,
@@ -131,7 +134,17 @@
       "Gusano soldado (Spodoptera exigua)",
       "Barrenador piralido (Diaphania pyloalis)"
     ],
-    "ruta_data_yaml": "C:\\Users\\erson\\Documents\\Programación\\ISIDEAD\\PlagIA\\dataset\\03_deteccion_plagas_yolo\\data.yaml",
+    "ruta_data_yaml": "C:\\Users\\erson\\Documents\\Programación\\Proyectos\\ISIDEAD\\PlagIA\\backend\\dataset\\03_deteccion_plagas_yolo\\data.yaml",
+    "origen_datos": "PREENTRENAMIENTO_REPOSITORIO_ABIERTO_INTERNET",
+    "nota_taxonomica_rp11": "Con base en Ding et al. (2025, RP11), el pre-entrenamiento de IP102 debe separarse por estadio biológico (adulto vs. larva) al hacer fine-tuning con datos locales del Tolima.",
     "imagenes_clasificacion_9_plagas": 991
+  },
+  "dominio_04_tolima_real_isidead": {
+    "dominio": "04_tolima_real_isidead",
+    "origen_datos": "RECOLECCION_LOCAL_TOLIMA_SEMILLERO_ISIDEAD",
+    "estado": "EN_RECOLECCION_CAMPO_ACTA_N3_2026",
+    "municipios_objetivo": ["Ibagué (Meseta de Ibagué)", "Saldaña", "El Espinal"],
+    "frentes_acta1_2026": ["01_plagas_y_sintomas", "02_estado_planta_dosel", "03_estado_suelo"],
+    "imagenes_locales_validadas_actuales": 0
   }
 }

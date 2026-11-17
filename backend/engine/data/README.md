@@ -1,8 +1,8 @@
-# Gobernanza de Datos Multinivel - PlagIA Enterprise
+# Gobernanza de Datos Multinivel - FitoVigIA Enterprise
 
 ## 1. Repositorio de Datasets (`dataset/`)
 
-El motor `engine` consume las fuentes ubicadas en `C:\Users\erson\Documents\Programación\ISIDEAD\PlagIA\dataset`:
+El motor `engine` consume las fuentes ubicadas en `backend/dataset`:
 
 1. **Nivel Aéreo (VANT / Dron):**
    * Carpeta: `dataset/Rice crop diseases drone captured dataset`

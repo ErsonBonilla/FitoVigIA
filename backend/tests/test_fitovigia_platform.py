@@ -1,12 +1,12 @@
 """
-Suite de Pruebas Automatizadas E2E de PlagIA Enterprise bajo la Regla de Oro (pytest).
+Suite de Pruebas Automatizadas E2E de FitoVigIA Enterprise bajo la Regla de Oro (pytest).
 
 Verifica:
-1. Regla de Oro en `dataset/_plagia_curado/`: dominios `01_dron_dosel_cls`, `02_campo_hoja_cls`
+1. Regla de Oro en `dataset/`: dominios `01_dron_dosel_cls`, `02_campo_hoja_cls`
    y `03_deteccion_plagas_yolo` con etiquetas y particiones internas en español y protocolo
    Ultralytics YOLO (`images/train`, `labels/train`, `data.yaml`) en inglés.
 2. Preprocesamiento radiométrico CLAHE (OpenCV) y tensores Albumentations.
-3. Arquitecturas PyTorch (`ClasificadorCNNPlagIA`), `DetectorFitosanitarioYOLO` y exportación
+3. Arquitecturas PyTorch (`ClasificadorCNNFitoVigIA`), `DetectorFitosanitarioYOLO` y exportación
    ONNX con etiquetas en español (`sano`, `roya_parda`, `roya_amarilla`, `suelo_desnudo`).
 4. Geoprocesamiento de ortomosaicos GeoTIFF (Rasterio) y Mapas de Calor GeoJSON (GeoPandas).
 5. Plataforma Backend FastAPI: Salud GPU/ONNX, Auth JWT, Lotes del Tolima, Inferencia Móvil,
@@ -33,6 +33,8 @@ from engine.config import (
     CLASES_DRON,
     DIR_ASSETS_MOVIL,
     DIR_DATASET_DRON,
+    DIR_TOLIMA_REAL_ISIDEAD,
+    ORIGEN_PREENTRENAMIENTO_PUBLICO,
     RUTA_DATA_YAML_YOLO,
     RUTA_MODELO_CAMPO_ONNX_MOVIL,
     RUTA_MODELO_CAMPO_ONNX_SERVIDOR,
@@ -55,9 +57,11 @@ from engine.geospatial import (
     crear_ortomosaico_geotiff_muestra,
     exportar_artefactos_mapa_calor,
     seccionar_ortomosaico_en_parches,
+    validar_parametros_vuelo_uav_rac100,
 )
 from engine.preprocessing import (
     aplicar_correccion_radiometrica_clahe,
+    calcular_indices_vegetativos_rgb_uav,
     preprocesar_para_inferencia,
 )
 
@@ -84,7 +88,7 @@ def test_gobernanza_datos_y_particion_sin_fuga():
     fuga = (df_particionado.groupby("group_id")["particion"].nunique() > 1).sum()
     assert int(fuga) == 0
 
-    # Validar los 3 dominios especializados bajo la Regla de Oro en dataset/_plagia_curado/
+    # Validar los 3 dominios especializados bajo la Regla de Oro en dataset/
     curaduria = obtener_resumen_curaduria()
     assert curaduria["dominio_01_dron_dosel"]["grupos_con_fuga"] == 0
     assert curaduria["dominio_01_dron_dosel"]["clases"] == [
@@ -118,6 +122,14 @@ def test_preprocesamiento_clahe_y_detector_yolo():
     assert len(cajas) >= 1
     assert cajas[0]["label"] == "roya_parda"
     assert len(cajas[0]["bbox_xyxy"]) == 4
+
+    # Verificar índices vegetativos UAV RGB (ExG y VARI) y validador RAC 100 / GSD
+    indices = calcular_indices_vegetativos_rgb_uav(mejorada)
+    assert "exg_mean" in indices and "vari_mean" in indices and "cobertura_dosel_pct" in indices
+    vuelo = validar_parametros_vuelo_uav_rac100(altitude_m=25.0, overlap_front_pct=80.0, overlap_side_pct=75.0)
+    assert vuelo["rac100_vlos_compliant"] is True
+    assert vuelo["photogrammetry_valid"] is True
+    assert DIR_TOLIMA_REAL_ISIDEAD.exists()
 
 
 def test_clasificador_pytorch_y_exportacion_onnx_movil():
@@ -223,7 +235,7 @@ def test_endpoints_fastapi_empresarial():
         # 2. Autenticación JWT (/api/v1/auth/login y /api/v1/auth/token)
         r_auth = cliente.post(
             "/api/v1/auth/login",
-            json={"username": "agronomo@plagia.co", "password": "PlagIA2026*"},
+            json={"username": "agronomo@fitovigia.co", "password": "FitoVigIA2026*"},
         )
         assert r_auth.status_code == 200
         token = r_auth.json()["access_token"]
@@ -251,6 +263,13 @@ def test_endpoints_fastapi_empresarial():
             "roya_amarilla",
             "suelo_desnudo",
         }
+        assert datos_pred["dataset_origin"] == ORIGEN_PREENTRENAMIENTO_PUBLICO
+        assert datos_pred["acta1_study_front"] in {
+            "01_plagas_y_sintomas",
+            "02_estado_planta_dosel",
+            "03_estado_suelo",
+        }
+        assert "exg_mean" in datos_pred["vegetative_indices"]
         assert "AVISO AGRONOMICO" in datos_pred["disclaimer"]
 
         # Imagen negra plana -> debe ser rechazada como 'desconocido_no_arroz'
@@ -304,3 +323,88 @@ def test_endpoints_fastapi_empresarial():
         datos_calor = r_calor.json()
         assert datos_calor["geojson"]["type"] == "FeatureCollection"
         assert len(datos_calor["geojson"]["features"]) >= 1
+
+
+def test_seguridad_owasp_asvs_portswigger():
+    """Audita controles defensivos contra vectores OWASP Top 10, ASVS v4.0.3 y PortSwigger."""
+    import pytest
+    from backend.core.security import _cifrar_contrasena, verificar_contrasena
+    from backend.core.storage import servicio_almacenamiento
+
+    # 1. Criptografía PBKDF2-HMAC-SHA256 con sal y comparación en tiempo constante (OWASP A02 / ASVS V2.4)
+    hash_1 = _cifrar_contrasena("ClaveSeguraTolima2026*")
+    hash_2 = _cifrar_contrasena("ClaveSeguraTolima2026*")
+    assert hash_1.startswith("pbkdf2_sha256$")
+    assert hash_1 != hash_2  # Sales aleatorias únicas por cada derivación
+    assert verificar_contrasena("ClaveSeguraTolima2026*", hash_1) is True
+    assert verificar_contrasena("ClaveIncorrecta2026*", hash_1) is False
+
+    # 2. Prevención de Path Traversal en Almacenamiento de Objetos (OWASP A01 / ASVS V12.3 / PortSwigger)
+    with pytest.raises(ValueError):
+        servicio_almacenamiento.guardar_bytes("../../etc/passwd", b"malicioso")
+    with pytest.raises(ValueError):
+        servicio_almacenamiento.guardar_bytes("movil/..\\..\\secret.txt", b"malicioso")
+
+    with TestClient(app) as cliente:
+        # 3. Cabeceras HTTP de Seguridad (OWASP A05 / ASVS V14.4)
+        r_health = cliente.get("/api/v1/health")
+        assert r_health.headers.get("X-Content-Type-Options") == "nosniff"
+        assert r_health.headers.get("X-Frame-Options") == "DENY"
+        assert r_health.headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
+        assert "max-age=31536000" in r_health.headers.get("Strict-Transport-Security", "")
+        assert "default-src 'none'" in r_health.headers.get("Content-Security-Policy", "")
+        assert r_health.headers.get("X-Request-ID")
+
+        # 4. Prevención de Mass Assignment / Parameter Pollution (OWASP A04 / ASVS V5.1)
+        r_mass = cliente.post(
+            "/api/v1/auth/login",
+            json={
+                "username": "agronomo@fitovigia.co",
+                "password": "FitoVigIA2026*",
+                "role": "SUPERADMIN_INYECTADO",
+            },
+        )
+        assert r_mass.status_code == 422
+
+        # 5. Rechazo de Archivos Falsificados por Magic Bytes (OWASP A08 / PortSwigger File Upload)
+        falso_jpeg = b"<html><script>alert('xss')</script></html>"
+        r_spoof = cliente.post(
+            "/api/v1/inference/online",
+            files={"file": ("exploit.jpg", io.BytesIO(falso_jpeg), "image/jpeg")},
+            data={"lot_id": "LOTE-ESPINAL-01"},
+        )
+        assert r_spoof.status_code == 400
+        assert "Firma binaria" in r_spoof.json()["detail"]
+
+        # 6. Bloqueo de Path Traversal en parámetros de formulario (`lot_id`)
+        bytes_jpg = _crear_bytes_jpeg_prueba()
+        r_traversal = cliente.post(
+            "/api/v1/inference/online",
+            files={"file": ("hoja.jpg", io.BytesIO(bytes_jpg), "image/jpeg")},
+            data={"lot_id": "../../escape_dir"},
+        )
+        assert r_traversal.status_code == 400
+
+        # 7. Seguridad JWT: revocación en `/auth/logout` y rechazo de tokens manipulados (PortSwigger JWT)
+        r_login = cliente.post(
+            "/api/v1/auth/login",
+            json={"username": "agronomo@fitovigia.co", "password": "FitoVigIA2026*"},
+        )
+        assert r_login.status_code == 200
+        jwt_valido = r_login.json()["access_token"]
+
+        r_me = cliente.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {jwt_valido}"})
+        assert r_me.status_code == 200
+        assert r_me.json()["username"] == "agronomo@fitovigia.co"
+
+        r_logout = cliente.post(
+            "/api/v1/auth/logout", headers={"Authorization": f"Bearer {jwt_valido}"}
+        )
+        assert r_logout.status_code == 200
+
+        # Intentar reutilizar el JWT revocado -> debe devolver 401 Unauthorized
+        r_revocado = cliente.get(
+            "/api/v1/auth/me", headers={"Authorization": f"Bearer {jwt_valido}"}
+        )
+        assert r_revocado.status_code == 401
+

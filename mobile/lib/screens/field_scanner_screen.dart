@@ -26,9 +26,25 @@ class PantallaEscanerCampo extends StatefulWidget {
 
 class _EstadoPantallaEscanerCampo extends State<PantallaEscanerCampo> {
   String _idLoteSeleccionado = ConfiguracionApp.lotesTolima.first['id'] as String;
+  String _frenteActa1Seleccionado = '01_plagas_y_sintomas';
   String _muestraSeleccionada = 'roya_parda';
   RegistroInspeccion? _ultimoDiagnostico;
   bool _procesando = false;
+
+  static const List<Map<String, String>> _frentesEstudioActa1 = [
+    {
+      'clave': '01_plagas_y_sintomas',
+      'etiqueta': 'Frente 1 (Acta N.° 1): Plagas y Síntomas (RP11 / YOLO-PEST)',
+    },
+    {
+      'clave': '02_estado_planta_dosel',
+      'etiqueta': 'Frente 2 (Acta N.° 1): Estado de la Planta / Dosel (ExG / VARI)',
+    },
+    {
+      'clave': '03_estado_suelo',
+      'etiqueta': 'Frente 3 (Acta N.° 1): Estado y Cobertura del Suelo',
+    },
+  ];
 
   static const List<Map<String, String>> _opcionesMuestra = [
     {'clave': 'roya_parda', 'etiqueta': 'Muestra Foliar: Roya Parda (roya_parda)'},
@@ -133,6 +149,33 @@ class _EstadoPantallaEscanerCampo extends State<PantallaEscanerCampo> {
                     if (valor != null) {
                       setState(() {
                         _idLoteSeleccionado = valor;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: _frenteActa1Seleccionado,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Frente de Estudio Semillero ISIDEAD (Acta N.° 1)',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _frentesEstudioActa1
+                      .map(
+                        (item) => DropdownMenuItem<String>(
+                          value: item['clave'],
+                          child: Text(
+                            item['etiqueta']!,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (valor) {
+                    if (valor != null) {
+                      setState(() {
+                        _frenteActa1Seleccionado = valor;
                       });
                     }
                   },

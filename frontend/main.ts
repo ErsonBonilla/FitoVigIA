@@ -1,5 +1,5 @@
 /**
- * Servidor Principal del Portal Web PlagIA (Deno 2.9.5 + Arquitectura de Islas SSR).
+ * Servidor Principal del Portal Web FitoVigIA (Deno 2.9.5 + Arquitectura de Islas SSR).
  *
  * Rutas en español cumpliendo la Regla de Oro:
  * - `/dashboard` : Tablero fitosanitario institucional (FEDEARROZ / AGROSAVIA)
@@ -17,16 +17,30 @@ export function manejarSolicitudPortal(req: Request): Response {
   const url = new URL(req.url);
   const ruta = url.pathname;
 
+  const cabecerasSeguridadComunes = {
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(), microphone=(), geolocation=(self)",
+    "cross-origin-opener-policy": "same-origin",
+    "content-security-policy":
+      "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com; connect-src 'self' http://localhost:8000 http://127.0.0.1:8000; frame-ancestors 'none';",
+  };
+
   const cabecerasHtml = {
     "content-type": "text/html; charset=utf-8",
     "cache-control": "no-store",
+    ...cabecerasSeguridadComunes,
   };
 
   if (ruta === "/static/styles.css") {
     const css = Deno.readTextFileSync(new URL("./static/styles.css", import.meta.url));
     return new Response(css, {
       status: 200,
-      headers: { "content-type": "text/css; charset=utf-8" },
+      headers: {
+        "content-type": "text/css; charset=utf-8",
+        ...cabecerasSeguridadComunes,
+      },
     });
   }
   if (ruta === "/" || ruta === "/dashboard") {
@@ -48,11 +62,14 @@ export function manejarSolicitudPortal(req: Request): Response {
         runtime: `Deno ${Deno.version.deno}`,
         typescript: Deno.version.typescript,
         v8: Deno.version.v8,
-        portal: "PlagIA Tolima SSR + Islands",
+        portal: "FitoVigIA Tolima SSR + Islands",
       }),
       {
         status: 200,
-        headers: { "content-type": "application/json; charset=utf-8" },
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          ...cabecerasSeguridadComunes,
+        },
       },
     );
   }
@@ -65,6 +82,6 @@ export function manejarSolicitudPortal(req: Request): Response {
 
 if (import.meta.main) {
   const puerto = Number(Deno.env.get("PORT") ?? "3000");
-  console.log(`Portal Web PlagIA (Deno ${Deno.version.deno}) activo en http://localhost:${puerto}/dashboard`);
+  console.log(`Portal Web FitoVigIA (Deno ${Deno.version.deno}) activo en http://localhost:${puerto}/dashboard`);
   Deno.serve({ port: puerto }, manejarSolicitudPortal);
 }

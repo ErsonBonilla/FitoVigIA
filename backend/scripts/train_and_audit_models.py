@@ -1,6 +1,6 @@
 """
 Entrenamiento Real en GPU (NVIDIA RTX 3050 con AMP FP16) y Auditoría Neuronal
-de los Modelos Fitosanitarios de PlagIA Enterprise:
+de los Modelos Fitosanitarios de FitoVigIA Enterprise:
 
 1. Dominio Aéreo Dron (`01_dron_dosel_cls` - 4 clases: sano, roya_parda, roya_amarilla, suelo_desnudo).
 2. Dominio Foliar de Campo (`02_campo_hoja_cls` - 10 clases fitosanitarias en español).
@@ -62,7 +62,7 @@ from engine.trainer import entrenar_y_registrar_mlflow
 def entrenar_y_auditar_ambos_dominios() -> dict:
     dispositivo = obtener_dispositivo_computo()
     print("=" * 80)
-    print(" PLAGIA ENTERPRISE - ENTRENAMIENTO GPU CUDA (AMP FP16) Y AUDITORIA NEURONAL")
+    print(" FITOVIGIA ENTERPRISE - ENTRENAMIENTO GPU CUDA (AMP FP16) Y AUDITORIA NEURONAL")
     print("=" * 80)
     print(f"Dispositivo activo: {dispositivo}")
     if dispositivo.type == "cuda":

@@ -47,7 +47,7 @@ def liberar_memoria_cuda() -> None:
         torch.cuda.empty_cache()
 
 
-class ClasificadorCNNPlagIA(nn.Module):
+class ClasificadorCNNFitoVigIA(nn.Module):
     """Clasificador CNN con Transfer Learning (ResNet50 o EfficientNet-B0).
 
     Mejoras de ingeniería neuronal:
@@ -140,7 +140,7 @@ class ClasificadorCNNPlagIA(nn.Module):
                 if any(nombre.startswith(f"features.{idx}") for idx in range(14, 19)):
                     param.requires_grad = True
 
-    def train(self, mode: bool = True) -> ClasificadorCNNPlagIA:
+    def train(self, mode: bool = True) -> ClasificadorCNNFitoVigIA:
         """Mantiene en `.eval()` todas las capas BatchNorm2d del backbone preentrenado en ImageNet."""
         super().train(mode)
         if mode:
@@ -160,10 +160,10 @@ def construir_clasificador_pytorch(
     dropout: float = 0.3,
     fine_tune: bool = False,
     pretrained: bool = True,
-) -> ClasificadorCNNPlagIA:
+) -> ClasificadorCNNFitoVigIA:
     """Factoría para instanciar el modelo PyTorch de clasificación fitosanitaria."""
     try:
-        return ClasificadorCNNPlagIA(
+        return ClasificadorCNNFitoVigIA(
             backbone_name=backbone_name,
             num_classes=num_classes,
             dropout=dropout,
@@ -171,7 +171,7 @@ def construir_clasificador_pytorch(
             pretrained=pretrained,
         )
     except Exception:
-        return ClasificadorCNNPlagIA(
+        return ClasificadorCNNFitoVigIA(
             backbone_name=backbone_name,
             num_classes=num_classes,
             dropout=dropout,
@@ -181,7 +181,7 @@ def construir_clasificador_pytorch(
 
 
 def auditar_salud_neuronas(
-    modelo: ClasificadorCNNPlagIA,
+    modelo: ClasificadorCNNFitoVigIA,
     lote_x: torch.Tensor,
     lote_y: torch.Tensor,
 ) -> dict:
@@ -340,7 +340,7 @@ class DetectorFitosanitarioYOLO:
 
 
 # Alias de compatibilidad
-PlagIACNNClassifier = ClasificadorCNNPlagIA
+FitoVigIACNNClassifier = ClasificadorCNNFitoVigIA
 YOLOPhytosanitaryDetector = DetectorFitosanitarioYOLO
 set_reproducible_seeds = fijar_semillas_reproducibles
 get_compute_device = obtener_dispositivo_computo

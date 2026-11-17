@@ -1,10 +1,11 @@
 {
-  "name": "@plagia/frontend",
+  "name": "@fitovigia/frontend",
   "version": "1.0.0",
   "exports": "./main.ts",
   "tasks": {
     "start": "deno run -A main.ts",
     "dev": "deno run -A --watch main.ts",
+    "lint": "deno lint main.ts routes/ islands/ tests/",
     "check": "deno check main.ts tests/portal_test.ts",
     "test": "deno test -A tests/portal_test.ts"
   },

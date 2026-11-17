@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # ============================================================================
-# PLAGIA ENTERPRISE - APROVISIONAMIENTO WSL 2 (UBUNTU + UV + PYTHON 3.12 + CUDA)
+# FITOVIGIA ENTERPRISE - APROVISIONAMIENTO WSL 2 (UBUNTU + UV + PYTHON 3.12 + CUDA)
 # Optimizado para NVIDIA GeForce RTX 3050 (4 GB VRAM, Ampere)
 # ============================================================================
 set -euo pipefail
 
 echo "============================================================================"
-echo " PlagIA Enterprise - Configuracion de Entorno en WSL 2 (Ubuntu)"
+echo " FitoVigIA Enterprise - Configuracion de Entorno en WSL 2 (Ubuntu)"
 echo "============================================================================"
 
 # 1. Verificar acceso al driver NVIDIA de Windows expuesto en WSL 2

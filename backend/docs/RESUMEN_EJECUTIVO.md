@@ -1,4 +1,4 @@
-# Resumen Ejecutivo Empresarial: Plataforma PlagIA
+# Resumen Ejecutivo Empresarial: Plataforma FitoVigIA
 
 **Sistema de Inteligencia Fitosanitaria, Reconocimiento Visual Multinivel y Geoprocesamiento para el Cultivo de Arroz en el Departamento del Tolima**
 
@@ -12,7 +12,7 @@ El monitoreo tradicional depende de recorridos manuales por muestreo en lotes de
 1. **Baja cobertura espacial y demora diagnóstica:** Los focos primarios en el interior del lote pasan desapercibidos hasta que la infestación supera el umbral económico de daño.
 2. **Aplicación indiscriminada de agroquímicos:** Ante la ausencia de mapas precisos de concentración de plaga, se realizan fumigaciones generalizadas en todo el lote, incrementando los costos operativos por hectárea y el impacto ambiental.
 
-**PlagIA** resuelve esta problemática mediante una plataforma empresarial de agricultura de precisión que articula captura con drones (VANTs), diagnóstico en terreno sin internet mediante dispositivos móviles (**Flutter Edge-AI**) y generación automatizada de **mapas de calor geoespaciales** para fumigación focalizada.
+**FitoVigIA** resuelve esta problemática mediante una plataforma empresarial de agricultura de precisión que articula captura con drones (VANTs), diagnóstico en terreno sin internet mediante dispositivos móviles (**Flutter Edge-AI**) y generación automatizada de **mapas de calor geoespaciales** para fumigación focalizada.
 
 ---
 
@@ -31,13 +31,13 @@ Durante la auditoría automatizada implementada en `engine/data_governance.py`, 
 1. **Archivos duplicados exactos** (sufijos ` - Copy.jpg` dentro de las carpetas de entrenamiento).
 2. **Aumentaciones offline cruzadas (`augmented__<capture_id>_<hash>.jpg`):** Múltiples variaciones generadas a partir de la misma captura base aparecen simultáneamente en `Train/` y `Test/`.
 
-Si se entrenara respetando las carpetas de origen, el modelo memorizaría la textura del lote original y reportaría métricas artificialmente infladas. Por ello, **PlagIA unifica todo el inventario, elimina copias redundantes, extrae el identificador de captura raíz (`group_id`) y ejecuta un particionado propio `70% Train / 15% Val / 15% Test` agrupado por entidad**, garantizando cero fuga de información entre particiones.
+Si se entrenara respetando las carpetas de origen, el modelo memorizaría la textura del lote original y reportaría métricas artificialmente infladas. Por ello, **FitoVigIA unifica todo el inventario, elimina copias redundantes, extrae el identificador de captura raíz (`group_id`) y ejecuta un particionado propio `70% Train / 15% Val / 15% Test` agrupado por entidad**, garantizando cero fuga de información entre particiones.
 
 ---
 
 ## 3. Justificación de la Arquitectura Tecnológica
 
-La arquitectura de **PlagIA** fue diseñada bajo cuatro restricciones operativas reales del sector arrocero tolimense:
+La arquitectura de **FitoVigIA** fue diseñada bajo cuatro restricciones operativas reales del sector arrocero tolimense:
 
 1. **Entorno de Desarrollo y Cómputo (`uv` + Python 3.12 + CUDA en WSL 2):**
    * Gestión determinista de dependencias sin sobrecarga de Conda mediante `uv` y `pyproject.toml`.
@@ -80,19 +80,19 @@ Cada experimento ejecutado en `03_training_pytorch_yolo_mlflow.ipynb` registra e
 * Artefactos visuales: Matriz de Confusión normalizada, Curvas ROC por patología y reporte tabular.
 * Firma formal de entrada/salida (*Model Signature*).
 
-En `04_registro_onnx_y_mapas_calor.ipynb`, el modelo con mayor **F1-Macro y Recall** se registra formalmente como `plagia_rice_classifier`, se promueve al stage **`Staging`** y se compila automáticamente a `models/plagia_server_fp32.onnx` y `models/plagia_mobile_int8.onnx` (sincronizado también hacia `mobile/assets/models/`).
+En `04_registro_onnx_y_mapas_calor.ipynb`, el modelo con mayor **F1-Macro y Recall** se registra formalmente como `fitovigia_rice_classifier`, se promueve al stage **`Staging`** y se compila automáticamente a `models/fitovigia_server_fp32.onnx` y `models/fitovigia_mobile_int8.onnx` (sincronizado también hacia `mobile/assets/models/`).
 
 ---
 
 ## 7. Arquitectura de Producción y Despliegue Rural
 
 El sistema completo se despliega mediante `docker-compose.yml` integrando seis servicios aislados:
-1. **`plagia-api` (FastAPI + Uvicorn + GPU):** Expone endpoints REST autenticados con JWT para gestión de fincas/lotes, inferencia móvil, carga de ortomosaicos, sincronización offline y entrega de mapas de calor GeoJSON.
-2. **`plagia-celery-worker` (Celery + GPU):** Ejecuta la segmentación por parches y actualización de capas geoespaciales en segundo plano.
-3. **`plagia-redis` (Redis 7):** Broker de mensajería y caché de estados de tareas.
-4. **`plagia-postgis` (PostgreSQL 16 + PostGIS 3.4):** Almacenamiento relacional y espacial de fincas, polígonos de lotes y puntos de infestación.
-5. **`plagia-minio` (MinIO Object Storage):** Repositorio compatible con S3 para ortomosaicos GeoTIFF, parches recortados y mapas renderizados.
-6. **`plagia-mlflow` (MLflow Tracking Server):** Servidor centralizado de experimentos y registro de modelos.
+1. **`fitovigia-api` (FastAPI + Uvicorn + GPU):** Expone endpoints REST autenticados con JWT para gestión de fincas/lotes, inferencia móvil, carga de ortomosaicos, sincronización offline y entrega de mapas de calor GeoJSON.
+2. **`fitovigia-celery-worker` (Celery + GPU):** Ejecuta la segmentación por parches y actualización de capas geoespaciales en segundo plano.
+3. **`fitovigia-redis` (Redis 7):** Broker de mensajería y caché de estados de tareas.
+4. **`fitovigia-postgis` (PostgreSQL 16 + PostGIS 3.4):** Almacenamiento relacional y espacial de fincas, polígonos de lotes y puntos de infestación.
+5. **`fitovigia-minio` (MinIO Object Storage):** Repositorio compatible con S3 para ortomosaicos GeoTIFF, parches recortados y mapas renderizados.
+6. **`fitovigia-mlflow` (MLflow Tracking Server):** Servidor centralizado de experimentos y registro de modelos.
 
 ---
 
@@ -100,7 +100,7 @@ El sistema completo se despliega mediante `docker-compose.yml` integrando seis s
 
 1. **Variabilidad lumínica y altura de vuelo en drones:** Los cambios bruscos de nubosidad o vuelos a alturas superiores a 40 metros sobre el dosel reducen la resolución espacial por píxel (GSD). Se mitiga parcialmente con el filtro **CLAHE** en preprocesamiento, pero se recomienda estandarizar vuelos entre 15 m y 25 m de altura.
 2. **Similitud sintomática temprana:** En estadios iniciales, ciertas deficiencias nutricionales (ej. déficit de nitrógeno o potasio) pueden presentar clorosis visualmente similar a la roya amarilla (`yellow_rust`).
-3. **Aviso de Uso Responsable (Disclaimer Agronómico Obligatorio):** Todas las respuestas de la API y la interfaz móvil incluyen explícitamente la advertencia de que **PlagIA es una herramienta de soporte a la decisión para Manejo Integrado de Plagas (MIP)** y toda aplicación química debe ser validada por un Ingeniero Agrónomo con tarjeta profesional vigente conforme a la normatividad del **ICA (Instituto Colombiano Agropecuario)**.
+3. **Aviso de Uso Responsable (Disclaimer Agronómico Obligatorio):** Todas las respuestas de la API y la interfaz móvil incluyen explícitamente la advertencia de que **FitoVigIA es una herramienta de soporte a la decisión para Manejo Integrado de Plagas (MIP)** y toda aplicación química debe ser validada por un Ingeniero Agrónomo con tarjeta profesional vigente conforme a la normatividad del **ICA (Instituto Colombiano Agropecuario)**.
 
 ---
 

@@ -1,5 +1,5 @@
 """
-Esquemas Pydantic v2 para los Contratos OpenAPI del Backend Empresarial PlagIA.
+Esquemas Pydantic v2 para los Contratos OpenAPI del Backend Empresarial FitoVigIA.
 
 Aplica la Regla de Oro:
 - Clases internas de esquema, descripciones y ejemplos visibles en OpenAPI/Swagger en español.
@@ -11,18 +11,35 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+PATRON_ID_SEGURO = r"^[A-Za-z0-9_-]{3,64}$"
+PATRON_ETIQUETA_SEGURA = r"^[a-z0-9_]{2,64}$"
 
 
 class SolicitudToken(BaseModel):
-    username: str = Field(..., description="Correo corporativo del operador", examples=["agronomo@plagia.co"])
-    password: str = Field(..., description="Contraseña corporativa", examples=["PlagIA2026*"])
+    model_config = ConfigDict(extra="forbid")
+
+    username: str = Field(
+        ...,
+        min_length=5,
+        max_length=120,
+        description="Correo corporativo del operador",
+        examples=["agronomo@fitovigia.co"],
+    )
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=128,
+        description="Contraseña corporativa",
+        examples=["FitoVigIA2026*"],
+    )
 
 
 class RespuestaToken(BaseModel):
     access_token: str = Field(..., description="Token JWT firmado")
     token_type: str = Field(default="bearer", description="Tipo de esquema de autenticación OAuth2")
-    role: str = Field(..., description="Rol asignado dentro de PlagIA")
+    role: str = Field(..., description="Rol asignado dentro de FitoVigIA")
     district: str = Field(..., description="Distrito arrocero del Tolima")
     full_name: str = Field(..., description="Nombre completo del profesional")
 
@@ -50,6 +67,18 @@ class EsquemaCajaDelimitadora(BaseModel):
 class RespuestaPrediccionCampo(BaseModel):
     lot_id: str = Field(..., description="Identificador del lote arrocero en el Tolima")
     source_type: str = Field(..., description="Fuente de captura (MOVIL_EN_LINEA, DRON_VANT)")
+    dataset_origin: str = Field(
+        default="PREENTRENAMIENTO_REPOSITORIO_ABIERTO_INTERNET",
+        description="Origen y gobernanza de datos (Pre-entrenamiento público vs. Recolección local Tolima ISIDEAD)",
+    )
+    acta1_study_front: str = Field(
+        default="02_estado_planta_dosel",
+        description="Frente de estudio según Acta N.° 1 de 2026 del Semillero ISIDEAD",
+    )
+    vegetative_indices: dict[str, float] = Field(
+        default_factory=dict,
+        description="Índices espectrales visibles UAV RGB (ExG, VARI y cobertura de dosel)",
+    )
     disease_label: str = Field(..., description="Etiqueta fitosanitaria diagnosticada en español", examples=["roya_parda"])
     common_name: str = Field(..., description="Nombre común de la patología en el Tolima")
     causal_agent: str = Field(..., description="Agente fitopatógeno causal")
@@ -78,20 +107,47 @@ class RespuestaTrabajoOrtomosaico(BaseModel):
 
 
 class ElementoInspeccionOffline(BaseModel):
-    client_record_id: str = Field(..., examples=["MOVIL-OFFLINE-2026-001"])
-    lot_id: str = Field(default="LOTE-ESPINAL-01")
-    disease_label: str = Field(..., examples=["roya_parda"])
+    model_config = ConfigDict(extra="forbid")
+
+    client_record_id: str = Field(
+        ...,
+        min_length=3,
+        max_length=96,
+        pattern=PATRON_ID_SEGURO,
+        examples=["MOVIL-OFFLINE-2026-001"],
+    )
+    lot_id: str = Field(
+        default="LOTE-ESPINAL-01",
+        min_length=3,
+        max_length=64,
+        pattern=PATRON_ID_SEGURO,
+    )
+    disease_label: str = Field(
+        ...,
+        min_length=2,
+        max_length=64,
+        pattern=PATRON_ETIQUETA_SEGURA,
+        examples=["roya_parda"],
+    )
     confidence: float = Field(..., ge=0.0, le=1.0)
     severity_index: float = Field(default=0.75, ge=0.0, le=1.0)
-    latitude: float = Field(..., examples=[4.1486])
-    longitude: float = Field(..., examples=[-74.8830])
+    latitude: float = Field(..., ge=-90.0, le=90.0, examples=[4.1486])
+    longitude: float = Field(..., ge=-180.0, le=180.0, examples=[-74.8830])
     captured_at: datetime | None = None
-    model_version: str = Field(default="1.0.0-edge-int8")
+    model_version: str = Field(default="1.0.0-edge-int8", max_length=64)
 
 
 class SolicitudSincronizacionLoteOffline(BaseModel):
-    device_id: str = Field(..., examples=["ANDROID-TOLIMA-CAMPO-01"])
-    records: list[ElementoInspeccionOffline]
+    model_config = ConfigDict(extra="forbid")
+
+    device_id: str = Field(
+        ...,
+        min_length=3,
+        max_length=64,
+        pattern=PATRON_ID_SEGURO,
+        examples=["ANDROID-TOLIMA-CAMPO-01"],
+    )
+    records: list[ElementoInspeccionOffline] = Field(..., min_length=1, max_length=500)
 
 
 class RespuestaSincronizacionLoteOffline(BaseModel):

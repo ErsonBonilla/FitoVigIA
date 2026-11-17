@@ -1,5 +1,5 @@
 """
-Punto de Entrada Principal del Backend Empresarial PlagIA (FastAPI Asíncrono).
+Punto de Entrada Principal del Backend Empresarial FitoVigIA (FastAPI Asíncrono).
 
 Aplica la Regla de Oro:
 - Configuración, ciclo de inicialización de BD/modelos y mensajes visibles en español.
@@ -9,8 +9,9 @@ Aplica la Regla de Oro:
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+import uuid
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.v1 import auth, drones, farms, inference, maps, sync
@@ -44,12 +45,30 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+@app.middleware("http")
+async def middleware_cabeceras_seguridad_owasp(request: Request, call_next) -> Response:
+    """Inyecta cabeceras de defensa en profundidad (OWASP ASVS V14.4 / PortSwigger)."""
+    id_correlacion = request.headers.get("X-Request-ID") or uuid.uuid4().hex
+    respuesta: Response = await call_next(request)
+    respuesta.headers["X-Request-ID"] = id_correlacion
+    respuesta.headers["X-Content-Type-Options"] = "nosniff"
+    respuesta.headers["X-Frame-Options"] = "DENY"
+    respuesta.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    respuesta.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(self)"
+    respuesta.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    respuesta.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    if not request.url.path.startswith(("/docs", "/redoc", "/openapi.json")):
+        respuesta.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+    return respuesta
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=configuracion.cors_allowed_origins,
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
 )
 
 

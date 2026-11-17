@@ -1,27 +1,27 @@
-name: plagia-tolima-enterprise
+name: fitovigia-tolima-enterprise
 
 services:
   postgis:
     image: postgis/postgis:16-3.4-alpine
-    container_name: plagia-postgis
+    container_name: fitovigia-postgis
     restart: unless-stopped
     environment:
-      POSTGRES_USER: plagia
-      POSTGRES_PASSWORD: plagia_secret
-      POSTGRES_DB: plagia_geo
+      POSTGRES_USER: fitovigia
+      POSTGRES_PASSWORD: fitovigia_secret
+      POSTGRES_DB: fitovigia_geo
     ports:
       - "5432:5432"
     volumes:
       - postgis_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U plagia -d plagia_geo"]
+      test: ["CMD-SHELL", "pg_isready -U fitovigia -d fitovigia_geo"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7.4-alpine
-    container_name: plagia-redis
+    container_name: fitovigia-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -35,12 +35,12 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: plagia-minio
+    container_name: fitovigia-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: plagia_admin
-      MINIO_ROOT_PASSWORD: plagia_minio_secret
+      MINIO_ROOT_USER: fitovigia_admin
+      MINIO_ROOT_PASSWORD: fitovigia_minio_secret
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -51,7 +51,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: plagia-mlflow
+    container_name: fitovigia-mlflow
     restart: unless-stopped
     command: >
       mlflow server
@@ -68,16 +68,18 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: plagia-api
+    container_name: fitovigia-api
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     environment:
-      PLAGIA_ENV: production
-      PLAGIA_USE_CUDA: "true"
-      PLAGIA_DATABASE_URL: postgresql+psycopg2://plagia:plagia_secret@postgis:5432/plagia_geo
-      PLAGIA_REDIS_URL: redis://redis:6379/0
-      PLAGIA_CELERY_EAGER_FALLBACK: "false"
-      PLAGIA_MINIO_ENDPOINT: minio:9000
-      PLAGIA_MLFLOW_URI: http://mlflow:5000
+      FITOVIGIA_ENV: production
+      FITOVIGIA_USE_CUDA: "true"
+      FITOVIGIA_DATABASE_URL: postgresql+psycopg2://fitovigia:fitovigia_secret@postgis:5432/fitovigia_geo
+      FITOVIGIA_REDIS_URL: redis://redis:6379/0
+      FITOVIGIA_CELERY_EAGER_FALLBACK: "false"
+      FITOVIGIA_MINIO_ENDPOINT: minio:9000
+      FITOVIGIA_MLFLOW_URI: http://mlflow:5000
     ports:
       - "8000:8000"
     volumes:
@@ -103,16 +105,18 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: plagia-celery-worker
+    container_name: fitovigia-celery-worker
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     command: celery -A backend.workers.celery_app.celery_app worker --loglevel=info --concurrency=2
     environment:
-      PLAGIA_ENV: production
-      PLAGIA_USE_CUDA: "true"
-      PLAGIA_DATABASE_URL: postgresql+psycopg2://plagia:plagia_secret@postgis:5432/plagia_geo
-      PLAGIA_REDIS_URL: redis://redis:6379/0
-      PLAGIA_CELERY_EAGER_FALLBACK: "false"
-      PLAGIA_MINIO_ENDPOINT: minio:9000
+      FITOVIGIA_ENV: production
+      FITOVIGIA_USE_CUDA: "true"
+      FITOVIGIA_DATABASE_URL: postgresql+psycopg2://fitovigia:fitovigia_secret@postgis:5432/fitovigia_geo
+      FITOVIGIA_REDIS_URL: redis://redis:6379/0
+      FITOVIGIA_CELERY_EAGER_FALLBACK: "false"
+      FITOVIGIA_MINIO_ENDPOINT: minio:9000
     volumes:
       - ./backend/models:/app/backend/models
       - ./backend/runtime:/app/backend/runtime
@@ -134,11 +138,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: plagia-frontend
+    container_name: fitovigia-frontend
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     environment:
       PORT: "3000"
-      PLAGIA_API_URL: http://api:8000/api/v1
+      FITOVIGIA_API_URL: http://api:8000/api/v1
     ports:
       - "3000:3000"
     depends_on:

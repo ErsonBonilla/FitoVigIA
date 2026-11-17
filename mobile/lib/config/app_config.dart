@@ -1,10 +1,10 @@
-/// Configuración central de la aplicación móvil PlagIA Tolima.
+/// Configuración central de la aplicación móvil FitoVigIA Tolima.
 ///
 /// Aplica la Regla de Oro:
 /// - Identificadores, constantes y lotes internos en español (`ConfiguracionApp`, `lotesTolima`).
 /// - URL del contrato HTTP hacia el backend FastAPI en inglés (`/api/v1`).
 class ConfiguracionApp {
-  static const String tituloApp = 'PlagIA Tolima Empresarial';
+  static const String tituloApp = 'FitoVigIA Tolima Empresarial';
   static const String versionModelo = '1.0.0-edge-int8';
   static const String idDispositivo = 'ANDROID-TOLIMA-CAMPO-01';
 

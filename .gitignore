@@ -10,9 +10,10 @@ __pycache__/
 backend/.pytest_cache/
 .ruff_cache/
 
-# Variables de entorno privadas
+# Variables de entorno privadas y configuracion local de IDE
 .env
 backend/.env
+.vscode/
 
 # Datasets de imagenes y manifiestos pesados (se conserva reporte de curaduria)
 backend/dataset/*
@@ -34,8 +35,8 @@ backend/models/*.pt
 backend/models/*.keras
 backend/models/*.h5
 backend/models/*_fp32.onnx
-!backend/models/plagia_mobile_int8.onnx
-!backend/models/plagia_campo_hoja_int8.onnx
+!backend/models/fitovigia_mobile_int8.onnx
+!backend/models/fitovigia_campo_hoja_int8.onnx
 !backend/models/*.json
 
 # Flutter / Android Studio build artifacts

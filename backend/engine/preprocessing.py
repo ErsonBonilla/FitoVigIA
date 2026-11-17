@@ -114,7 +114,7 @@ def desnormalizar_tensor(tensor_chw: np.ndarray | torch.Tensor) -> np.ndarray:
     return np.clip(rgb, 0, 255).astype(np.uint8)
 
 
-class DatasetFitosanitarioPlagIA(Dataset):
+class DatasetFitosanitarioFitoVigIA(Dataset):
     """Dataset PyTorch con corrección radiométrica CLAHE y aumento de datos Albumentations."""
 
     def __init__(
@@ -156,7 +156,7 @@ def construir_cargadores_datos(
         subconjunto = df_manifiesto_particionado[df_manifiesto_particionado["split"] == nombre_split]
         if subconjunto.empty:
             continue
-        ds = DatasetFitosanitarioPlagIA(
+        ds = DatasetFitosanitarioFitoVigIA(
             subconjunto, particion=nombre_split, aplicar_clahe=apply_clahe
         )
         cargadores[nombre_split] = DataLoader(
@@ -167,6 +167,50 @@ def construir_cargadores_datos(
             pin_memory=fijar_memoria,
         )
     return cargadores
+
+
+def calcular_indices_vegetativos_rgb_uav(imagen_rgb: np.ndarray) -> dict:
+    """Calcula índices vegetativos en el espectro visible RGB para imágenes aéreas UAV y de campo.
+
+    Fundamentado en la literatura del proyecto:
+    - Rojas et al. (2018) y Petro et al. (2018) [CIAT / Pontificia Universidad Javeriana].
+    - Gong et al. (2021) y Li et al. (2025) [Estimación de dosel e índice de área foliar en arroz con UAV].
+    - Hayat et al. (2020) [Segmentación de dosel vs. suelo/agua en arroz con UAV].
+
+    Retorna:
+    - `exg_mean`: Índice de Exceso de Verde (ExG = 2g - r - b).
+    - `vari_mean`: Índice Visible Resistente a la Atmósfera (VARI = (G - R) / (G + R - B)).
+    - `cobertura_dosel_pct`: Porcentaje estimado de píxeles de vegetación fotosintética activa.
+    """
+    arr = imagen_rgb.astype(np.float32)
+    r = arr[..., 0]
+    g = arr[..., 1]
+    b = arr[..., 2]
+    suma_rgb = r + g + b + 1e-6
+
+    r_norm = r / suma_rgb
+    g_norm = g / suma_rgb
+    b_norm = b / suma_rgb
+
+    # Excess Green Index (ExG)
+    exg = 2.0 * g_norm - r_norm - b_norm
+    exg_mean = float(np.mean(exg))
+
+    # Visible Atmospherically Resistant Index (VARI)
+    denom_vari = g + r - b
+    denom_seguro = np.where(np.abs(denom_vari) < 1.0, 1.0, denom_vari)
+    vari = np.clip((g - r) / denom_seguro, -1.0, 1.0)
+    vari_mean = float(np.mean(vari))
+
+    # Segmentación de cobertura de dosel de arroz (ExG > 0.08 indica follaje verde activo frente a suelo/agua)
+    mascara_dosel = exg > 0.08
+    cobertura_pct = round(float(np.mean(mascara_dosel)) * 100.0, 2)
+
+    return {
+        "exg_mean": round(exg_mean, 4),
+        "vari_mean": round(vari_mean, 4),
+        "cobertura_dosel_pct": cobertura_pct,
+    }
 
 
 def evaluar_dominio_arroz_e_incertidumbre(
@@ -187,6 +231,7 @@ def evaluar_dominio_arroz_e_incertidumbre(
     entropia_max = float(np.log(len(probs_seguras))) if len(probs_seguras) > 1 else 1.0
     entropia_norm = round(entropia / max(entropia_max, 1e-6), 4)
     confianza_max = float(np.max(probs_seguras))
+    indices_veg = calcular_indices_vegetativos_rgb_uav(imagen_rgb)
 
     if desv_espectral < umbral_varianza_minima:
         return {
@@ -194,6 +239,7 @@ def evaluar_dominio_arroz_e_incertidumbre(
             "motivo_rechazo": "Imagen sin textura espectral válida (varianza insuficiente).",
             "entropia_normalizada": entropia_norm,
             "desviacion_espectral": round(desv_espectral, 2),
+            "indices_vegetativos": indices_veg,
         }
 
     if confianza_max < umbral_confianza_minima and entropia_norm > 0.88:
@@ -202,6 +248,7 @@ def evaluar_dominio_arroz_e_incertidumbre(
             "motivo_rechazo": "Alta incertidumbre del clasificador; la imagen no coincide con patrones de arroz.",
             "entropia_normalizada": entropia_norm,
             "desviacion_espectral": round(desv_espectral, 2),
+            "indices_vegetativos": indices_veg,
         }
 
     return {
@@ -209,11 +256,12 @@ def evaluar_dominio_arroz_e_incertidumbre(
         "motivo_rechazo": None,
         "entropia_normalizada": entropia_norm,
         "desviacion_espectral": round(desv_espectral, 2),
+        "indices_vegetativos": indices_veg,
     }
 
 
 # Alias de compatibilidad
-PlagIADataset = DatasetFitosanitarioPlagIA
+FitoVigIADataset = DatasetFitosanitarioFitoVigIA
 apply_clahe_radiometric_correction = aplicar_correccion_radiometrica_clahe
 load_and_prepare_image = cargar_y_preparar_image = cargar_y_preparar_imagen
 get_transforms = obtener_transformaciones

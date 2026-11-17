@@ -1,11 +1,11 @@
-# PlagIA Mobile - Aplicación Empresarial Offline-First (Flutter / Dart)
+# FitoVigIA Mobile - Aplicación Empresarial Offline-First (Flutter / Dart)
 
 Aplicación móvil multiplataforma (Android / iOS) diseñada para operar en los lotes arroceros del **Tolima** bajo condiciones de conectividad limitada o nula.
 
 ## Características Principales
 
 1. **Inferencia Local en el Borde (Edge-AI ONNX INT8):**
-   * Carga el catálogo fitosanitario y el modelo cuantizado en `assets/models/` (`labels_tolima.json` y `plagia_mobile_int8.onnx`).
+   * Carga el catálogo fitosanitario y el modelo cuantizado en `assets/models/` (`labels_tolima.json` y `fitovigia_mobile_int8.onnx`).
    * Ejecuta diagnósticos en terreno sin conexión a internet y entrega recomendaciones de **Manejo Integrado de Plagas (MIP)**.
 2. **Geolocalización GPS Nativa:**
    * Registra las coordenadas exactas (`EPSG:4326`) de cada planta/hoja evaluada en los distritos de riego del Tolima (*El Espinal, Saldaña, Guamo, Purificación, Ibagué*).

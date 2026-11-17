@@ -20,7 +20,7 @@ from backend.core.database import (
     TrabajoOrtomosaicoORM,
     obtener_sesion_bd,
 )
-from backend.core.storage import servicio_almacenamiento
+from backend.core.storage import sanitizar_identificador_ruta, servicio_almacenamiento
 from backend.schemas.api_schemas import (
     RespuestaPrediccionCampo,
     RespuestaTrabajoOrtomosaico,
@@ -42,6 +42,39 @@ TIPOS_IMAGEN_PERMITIDOS = {
 }
 
 
+def validar_firma_magic_bytes_imagen(datos: bytes, permitir_tiff: bool = False) -> tuple[str, str]:
+    """Verifica las firmas binarias reales (Magic Bytes) para impedir subida de archivos falsificados (PortSwigger File Upload)."""
+    if len(datos) < 12:
+        raise HTTPException(
+            status_code=400,
+            detail="El archivo recibido está vacío o truncado.",
+        )
+    if datos.startswith(b"\xff\xd8\xff"):
+        return ".jpg", "image/jpeg"
+    if datos.startswith(b"\x89PNG\r\n\x1a\n"):
+        return ".png", "image/png"
+    if permitir_tiff and datos.startswith((b"II*\x00", b"MM\x00*")):
+        return ".tif", "image/tiff"
+    raise HTTPException(
+        status_code=400,
+        detail="Firma binaria de archivo no válida. Solo se permiten imágenes genuinas JPEG, PNG o GeoTIFF.",
+    )
+
+
+def _validar_parametros_entrada_inferencia(lot_id: str, latitude: float, longitude: float) -> str:
+    try:
+        lote_seguro = sanitizar_identificador_ruta(lot_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    if not (-90.0 <= latitude <= 90.0) or not (-180.0 <= longitude <= 180.0):
+        raise HTTPException(
+            status_code=400,
+            detail="Coordenadas geográficas fuera de rango válido EPSG:4326.",
+        )
+    return lote_seguro
+
+
 @router.post("/online", response_model=RespuestaPrediccionCampo)
 @router.post("/mobile", response_model=RespuestaPrediccionCampo)
 async def predecir_imagen_movil_campo(
@@ -54,17 +87,28 @@ async def predecir_imagen_movil_campo(
     domain: str = Form(default="dron"),
     sesion: Session = Depends(obtener_sesion_bd),
 ):
+    lote_seguro = _validar_parametros_entrada_inferencia(lot_id, latitude, longitude)
+
     if file.content_type and file.content_type.lower() not in TIPOS_IMAGEN_PERMITIDOS:
         raise HTTPException(
             status_code=400,
-            detail=f"Formato de archivo no soportado: {file.content_type}. Envíe JPEG o PNG.",
+            detail="Formato MIME no soportado. Envíe una imagen JPEG o PNG válida.",
         )
 
-    bytes_crudos = await file.read()
+    limite_bytes = configuracion.max_upload_image_mb * 1024 * 1024
+    bytes_crudos = await file.read(limite_bytes + 1)
+    if len(bytes_crudos) > limite_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=f"La imagen supera el tamaño máximo permitido ({configuracion.max_upload_image_mb} MB).",
+        )
+
+    ext_segura, mime_detectado = validar_firma_magic_bytes_imagen(bytes_crudos, permitir_tiff=False)
+
     try:
         resultado = inference_service.predict(
             bytes_crudos,
-            lot_id=lot_id,
+            lot_id=lote_seguro,
             latitude=latitude,
             longitude=longitude,
             source_type="MOVIL_EN_LINEA",
@@ -72,17 +116,18 @@ async def predecir_imagen_movil_campo(
         )
     except Exception as exc:
         raise HTTPException(
-            status_code=400, detail=f"No fue posible procesar la imagen: {exc}"
+            status_code=400,
+            detail="No fue posible decodificar ni procesar la imagen suministrada.",
         ) from exc
 
-    clave_objeto = f"movil/{lot_id}/{uuid.uuid4().hex[:12]}_{file.filename or 'captura.jpg'}"
+    clave_objeto = f"movil/{lote_seguro}/{uuid.uuid4().hex[:12]}_captura{ext_segura}"
     servicio_almacenamiento.guardar_bytes(
-        clave_objeto, bytes_crudos, tipo_contenido=file.content_type or "image/jpeg"
+        clave_objeto, bytes_crudos, tipo_contenido=mime_detectado
     )
 
     deteccion = DeteccionFitosanitariaORM(
         id_registro_cliente=f"EN-LINEA-{uuid.uuid4().hex[:10]}",
-        lote_id=lot_id,
+        lote_id=lote_seguro,
         tipo_fuente="MOVIL_EN_LINEA",
         etiqueta_enfermedad=resultado["disease_label"],
         confianza=resultado["confidence"],
@@ -104,18 +149,29 @@ async def enviar_ortomosaico_dron(
     lot_id: str = Form(default="LOTE-ESPINAL-01"),
     sesion: Session = Depends(obtener_sesion_bd),
 ):
-    bytes_crudos = await file.read()
+    lote_seguro = _validar_parametros_entrada_inferencia(lot_id, 4.1486, -74.8830)
+
+    limite_bytes = configuracion.max_upload_orthomosaic_mb * 1024 * 1024
+    bytes_crudos = await file.read(limite_bytes + 1)
     if not bytes_crudos:
         raise HTTPException(status_code=400, detail="El archivo de ortomosaico está vacío.")
+    if len(bytes_crudos) > limite_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=f"El ortomosaico supera el límite máximo permitido ({configuracion.max_upload_orthomosaic_mb} MB).",
+        )
+
+    ext_segura, mime_detectado = validar_firma_magic_bytes_imagen(bytes_crudos, permitir_tiff=True)
 
     id_tarea = f"ORTO-{uuid.uuid4().hex[:12].upper()}"
-    ext = ".tif" if (file.filename or "").lower().endswith((".tif", ".tiff")) else ".jpg"
-    clave_objeto = f"ortomosaicos/{lot_id}/{id_tarea}{ext}"
-    objeto_guardado = servicio_almacenamiento.guardar_bytes(clave_objeto, bytes_crudos)
+    clave_objeto = f"ortomosaicos/{lote_seguro}/{id_tarea}{ext_segura}"
+    objeto_guardado = servicio_almacenamiento.guardar_bytes(
+        clave_objeto, bytes_crudos, tipo_contenido=mime_detectado
+    )
 
     trabajo = TrabajoOrtomosaicoORM(
         id_tarea=id_tarea,
-        lote_id=lot_id,
+        lote_id=lote_seguro,
         estado="PENDIENTE",
         clave_objeto_almacenamiento=clave_objeto,
     )
@@ -123,12 +179,12 @@ async def enviar_ortomosaico_dron(
     sesion.commit()
 
     if configuracion.celery_eager_fallback:
-        ejecutar_analisis_ortomosaico(id_tarea, lot_id, objeto_guardado["local_path"])
+        ejecutar_analisis_ortomosaico(id_tarea, lote_seguro, objeto_guardado["local_path"])
     else:
         try:
-            procesar_ortomosaico_tarea.delay(id_tarea, lot_id, objeto_guardado["local_path"])
+            procesar_ortomosaico_tarea.delay(id_tarea, lote_seguro, objeto_guardado["local_path"])
         except Exception:
-            ejecutar_analisis_ortomosaico(id_tarea, lot_id, objeto_guardado["local_path"])
+            ejecutar_analisis_ortomosaico(id_tarea, lote_seguro, objeto_guardado["local_path"])
 
     sesion.refresh(trabajo)
     return RespuestaTrabajoOrtomosaico(
@@ -138,7 +194,7 @@ async def enviar_ortomosaico_dron(
         total_patches=trabajo.total_parches,
         infested_patches=trabajo.parches_infestados,
         infection_rate=trabajo.tasa_infestacion,
-        heatmap_geojson_url=f"/api/v1/geospatial/heatmap/{lot_id}",
+        heatmap_geojson_url=f"/api/v1/geospatial/heatmap/{lote_seguro}",
         message="Ortomosaico procesado y capa de calor actualizada exitosamente.",
     )
 

@@ -30,7 +30,7 @@ from engine.geospatial import (
 )
 
 celery_app = Celery(
-    "plagia_worker_empresarial",
+    "fitovigia_worker_empresarial",
     broker=configuracion.redis_url,
     backend=configuracion.redis_url,
 )
@@ -116,7 +116,7 @@ def ejecutar_analisis_ortomosaico(id_tarea: str, id_lote: str, ruta_archivo_str:
     return resumen_mapa
 
 
-@celery_app.task(name="plagia.procesar_ortomosaico")
+@celery_app.task(name="fitovigia.procesar_ortomosaico")
 def procesar_ortomosaico_tarea(id_tarea: str, id_lote: str, ruta_archivo_str: str) -> dict:
     return ejecutar_analisis_ortomosaico(
         id_tarea=id_tarea, id_lote=id_lote, ruta_archivo_str=ruta_archivo_str

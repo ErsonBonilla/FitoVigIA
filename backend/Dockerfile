@@ -1,5 +1,5 @@
 # ============================================================================
-# PLAGIA ENTERPRISE - DOCKERFILE DEL COMPONENTE BACKEND (UV + PYTHON 3.12 + CUDA)
+# FITOVIGIA ENTERPRISE - DOCKERFILE DEL COMPONENTE BACKEND (UV + PYTHON 3.12 + CUDA)
 # Optimizado para ejecucion sobre WSL 2 con NVIDIA Container Toolkit
 # ============================================================================
 FROM nvidia/cuda:12.6.2-cudnn-runtime-ubuntu24.04
@@ -33,7 +33,11 @@ RUN uv python install 3.12 && \
 
 COPY . .
 
-RUN uv sync --python 3.12
+RUN uv sync --python 3.12 && \
+    useradd --create-home --shell /bin/bash fitovigia && \
+    chown -R fitovigia:fitovigia /app
+
+USER fitovigia
 
 EXPOSE 8000
 

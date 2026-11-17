@@ -21,6 +21,8 @@ from engine.config import (
     CATALOGO_AGRONOMICO,
     CLASES_CAMPO_HOJA,
     CLASES_DRON,
+    ORIGEN_CAMPO_TOLIMA_REAL,
+    ORIGEN_PREENTRENAMIENTO_PUBLICO,
     RUTA_MODELO_CAMPO_ONNX_MOVIL,
     RUTA_MODELO_CAMPO_ONNX_SERVIDOR,
     RUTA_MODELO_ONNX_MOVIL,
@@ -30,6 +32,7 @@ from engine.config import (
 )
 from engine.exporter import asegurar_artefactos_por_defecto
 from engine.preprocessing import (
+    calcular_indices_vegetativos_rgb_uav,
     cargar_y_preparar_imagen,
     evaluar_dominio_arroz_e_incertidumbre,
     preprocesar_para_inferencia,
@@ -159,9 +162,28 @@ class ServicioInferenciaEmpresarial:
             for i, nombre_cls in enumerate(clases_activas)
         }
 
+        # Clasificación en los 3 frentes del Acta N.° 1 de 2026 del Semillero ISIDEAD
+        if etiqueta_pred == "suelo_desnudo":
+            frente_acta1 = "03_estado_suelo"
+        elif etiqueta_pred in {"dano_barrenador_tallo", "barrenador_tallo", "dano_insecto_foliar"}:
+            frente_acta1 = "01_plagas_y_sintomas"
+        else:
+            frente_acta1 = "02_estado_planta_dosel"
+
+        origen_datos = (
+            ORIGEN_CAMPO_TOLIMA_REAL
+            if "TOLIMA_REAL" in source_type.upper()
+            else ORIGEN_PREENTRENAMIENTO_PUBLICO
+        )
+
         return {
             "lot_id": lot_id,
             "source_type": source_type,
+            "dataset_origin": origen_datos,
+            "acta1_study_front": frente_acta1,
+            "vegetative_indices": chequeo_dominio.get(
+                "indices_vegetativos", calcular_indices_vegetativos_rgb_uav(img_rgb_cruda)
+            ),
             "disease_label": etiqueta_pred,
             "common_name": info_kb["nombre_comun"],
             "causal_agent": info_kb["agente_causal"],

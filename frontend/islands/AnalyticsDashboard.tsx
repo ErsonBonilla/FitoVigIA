@@ -18,19 +18,23 @@ export interface IndicadorDistritoTolima {
   estadoDiagnostico: "Cultivo Sano" | "Alerta Temprana" | "Plaga Detectada" | "Objeto No Identificado";
   claseSemantica: "sano" | "alerta" | "critico" | "desconocido";
   variedadPrincipal: string;
+  origenDatos: "Pre-entrenamiento Público (Internet)" | "En Recolección Local (ISIDEAD)";
+  frenteActa1: string;
 }
 
 export const INDICADORES_DISTRITOS_TOLIMA: IndicadorDistritoTolima[] = [
   {
-    codigo: "USOCOELLO_ESPINAL",
-    distrito: "Distrito Usocoello",
-    municipio: "El Espinal",
-    hectareasMonitoreadas: 1420,
-    tasaInfestacionPct: 18.4,
-    patogenoPredominante: "Piricularia (piricularia) / Roya Parda",
-    estadoDiagnostico: "Plaga Detectada",
-    claseSemantica: "critico",
+    codigo: "IBAGUE_MESETA",
+    distrito: "Meseta de Ibagué",
+    municipio: "Ibagué",
+    hectareasMonitoreadas: 890,
+    tasaInfestacionPct: 2.1,
+    patogenoPredominante: "Dosel con vigor normal (ExG/VARI óptimo)",
+    estadoDiagnostico: "Cultivo Sano",
+    claseSemantica: "sano",
     variedadPrincipal: "Fedearroz 67",
+    origenDatos: "En Recolección Local (ISIDEAD)",
+    frenteActa1: "02_estado_planta_dosel",
   },
   {
     codigo: "USOSALDANA",
@@ -38,21 +42,25 @@ export const INDICADORES_DISTRITOS_TOLIMA: IndicadorDistritoTolima[] = [
     municipio: "Saldaña",
     hectareasMonitoreadas: 1180,
     tasaInfestacionPct: 11.2,
-    patogenoPredominante: "Roya Amarilla (roya_amarilla)",
+    patogenoPredominante: "Piricularia en panícula (Lin et al., 2025)",
     estadoDiagnostico: "Alerta Temprana",
     claseSemantica: "alerta",
     variedadPrincipal: "Fedearroz 2000",
+    origenDatos: "Pre-entrenamiento Público (Internet)",
+    frenteActa1: "02_estado_planta_dosel",
   },
   {
-    codigo: "MESETA_IBAGUE",
-    distrito: "Meseta de Ibagué",
-    municipio: "Ibagué",
-    hectareasMonitoreadas: 890,
-    tasaInfestacionPct: 2.1,
-    patogenoPredominante: "Ausencia de síntomas foliares (sano)",
-    estadoDiagnostico: "Cultivo Sano",
-    claseSemantica: "sano",
+    codigo: "USOCOELLO_ESPINAL",
+    distrito: "Distrito Usocoello",
+    municipio: "El Espinal",
+    hectareasMonitoreadas: 1420,
+    tasaInfestacionPct: 18.4,
+    patogenoPredominante: "Piricularia (Pyricularia oryzae) / Mancha Parda",
+    estadoDiagnostico: "Plaga Detectada",
+    claseSemantica: "critico",
     variedadPrincipal: "Fedearroz 67",
+    origenDatos: "Pre-entrenamiento Público (Internet)",
+    frenteActa1: "01_plagas_y_sintomas",
   },
   {
     codigo: "PRADO_PURIFICACION",
@@ -60,10 +68,12 @@ export const INDICADORES_DISTRITOS_TOLIMA: IndicadorDistritoTolima[] = [
     municipio: "Purificación",
     hectareasMonitoreadas: 760,
     tasaInfestacionPct: 14.8,
-    patogenoPredominante: "Barrenador del Tallo (barrenador_tallo)",
+    patogenoPredominante: "Barrenador del Tallo (Diatraea / Rupela – RP11)",
     estadoDiagnostico: "Alerta Temprana",
     claseSemantica: "alerta",
     variedadPrincipal: "Fedearroz 2000",
+    origenDatos: "Pre-entrenamiento Público (Internet)",
+    frenteActa1: "01_plagas_y_sintomas",
   },
 ];
 
@@ -74,8 +84,8 @@ export function renderizarIslaAnalyticsDashboard(): string {
         <td><strong>${item.distrito}</strong></td>
         <td>${item.municipio}</td>
         <td>${item.variedadPrincipal}</td>
-        <td>${item.hectareasMonitoreadas.toLocaleString("es-CO")} ha</td>
-        <td><strong>${item.tasaInfestacionPct.toFixed(1)}%</strong></td>
+        <td><code>${item.frenteActa1}</code></td>
+        <td><small>${item.origenDatos}</small></td>
         <td>${item.patogenoPredominante}</td>
         <td><span class="insignia-estado ${item.claseSemantica}">${item.estadoDiagnostico}</span></td>
       </tr>
@@ -138,9 +148,9 @@ export function renderizarIslaAnalyticsDashboard(): string {
             <th>Distrito de Riego</th>
             <th>Municipio</th>
             <th>Variedad Dominante</th>
-            <th>Área Evaluada</th>
-            <th>Índice de Infestación</th>
-            <th>Diagnóstico Predominante</th>
+            <th>Frente Acta N.° 1</th>
+            <th>Origen del Dataset</th>
+            <th>Diagnóstico / Escenario</th>
             <th>Estado Fitosanitario</th>
           </tr>
         </thead>

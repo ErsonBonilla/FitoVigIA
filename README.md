@@ -1,20 +1,20 @@
-# PlagIA Enterprise
+# FitoVigIA Enterprise
 
 **Plataforma de Vigilancia Fitosanitaria, Visión Computacional Multinivel y Geoprocesamiento para el Cultivo de Arroz en el Tolima**
 
-PlagIA está organizada en **3 componentes principales desacoplados** en la raíz del proyecto para máxima claridad arquitectónica:
+FitoVigIA está organizada en **3 componentes principales desacoplados** en la raíz del proyecto para máxima claridad arquitectónica:
 
 ```text
-PlagIA/
+FitoVigIA/
 ├── backend/                     # COMPONENTE 1: Servidor API (FastAPI), Motor IA (PyTorch CUDA/YOLO/ONNX), Datasets y PostGIS/SQLite
 │   ├── api/v1/                  # Endpoints REST: auth, farms, inference, drones, maps, sync
 │   ├── core/                    # ConfiguracionEmpresarial, Seguridad JWT, BD Dual (PostGIS/SQLite) y MinIO
 │   ├── engine/                  # Motor de IA y Geoprocesamiento (PyTorch, YOLO, ONNX, Rasterio, GeoPandas, notebooks/)
-│   ├── dataset/                 # 3 Dominios curados (01_dron_dosel_cls, 02_campo_hoja_cls, 03_deteccion_plagas_yolo)
+│   ├── dataset/                 # 3 Dominios pre-entrenamiento público + 04_tolima_real_isidead (Recolección local Tolima)
 │   ├── models/                  # Modelos ONNX INT8 (4.5 MB) y auditoría neuronal
 │   ├── runtime/                 # Bases locales y artefactos en tiempo de ejecución (SQLite, MLflow, mapas de calor)
 │   ├── scripts/                 # Aprovisionamiento WSL 2, curaduría de datasets y entrenamiento GPU
-│   ├── tests/                   # Suite de pruebas automatizadas E2E (test_plagia_platform.py)
+│   ├── tests/                   # Suite de pruebas automatizadas E2E (test_fitovigia_platform.py)
 │   ├── docs/                    # RESUMEN_EJECUTIVO.md y ARQUITECTURA.md
 │   ├── main.py                  # Punto de entrada FastAPI
 │   └── pyproject.toml           # Gestión de dependencias Python 3.12 con uv + PyTorch CUDA
@@ -67,9 +67,9 @@ flutter pub get
 dart analyze
 flutter test
 ```
-Para compilar en **Android Studio**, abre directamente la carpeta `C:\Users\erson\Documents\Programación\ISIDEAD\PlagIA\mobile`.
+Para compilar en **Android Studio**, abre directamente la carpeta `mobile/`.
 
-### 4. Despliegue Completo con Docker Compose (Desde la raíz `PlagIA/`)
+### 4. Despliegue Completo con Docker Compose (Desde la raíz `FitoVigIA/`)
 ```bash
 docker compose up --build -d
 ```

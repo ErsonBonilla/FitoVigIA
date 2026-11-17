@@ -8,7 +8,7 @@ Consolidación Definitiva y Limpieza del Directorio `dataset/` bajo la Regla de 
 2. Resguarda los metadatos tabulares y anotaciones originales (`metadatos_origen_paddy.csv`
    y `metadatos_coco/`).
 3. Actualiza las rutas en los manifiestos CSV y en `data.yaml`.
-4. Elimina definitivamente `_archivo_crudo/`, `_plagia_curado/` y las 7 carpetas antiguas
+4. Elimina definitivamente `_archivo_crudo/`, `_fitovigia_curado/` y las 7 carpetas antiguas
    en inglés, liberando más de 3.5 GB de espacio en disco sin perder ninguna imagen curada
    (gracias a los enlaces duros NTFS).
 """
@@ -24,7 +24,7 @@ import pandas as pd
 
 RAIZ_PROYECTO = Path(__file__).resolve().parents[1]
 RAIZ_DATASET = RAIZ_PROYECTO / "dataset"
-RAIZ_CURADO_TEMP = RAIZ_DATASET / "_plagia_curado"
+RAIZ_CURADO_TEMP = RAIZ_DATASET / "_fitovigia_curado"
 RAIZ_ARCHIVO_TEMP = RAIZ_DATASET / "_archivo_crudo"
 
 ZONAS_TOLIMA = [
@@ -97,7 +97,7 @@ def _enriquecer_manifiesto_con_rutas_raiz(
 
 def consolidar_y_limpiar_dataset() -> dict:
     print("=" * 78)
-    print(" PLAGIA ENTERPRISE - CONSOLIDACION DEFINITIVA DE DATASET EN RAIZ")
+    print(" FITOVIGIA ENTERPRISE - CONSOLIDACION DEFINITIVA DE DATASET EN RAIZ")
     print("=" * 78)
 
     dir_d1_final = RAIZ_DATASET / "01_dron_dosel_cls"
@@ -105,7 +105,7 @@ def consolidar_y_limpiar_dataset() -> dict:
     dir_d3_final = RAIZ_DATASET / "03_deteccion_plagas_yolo"
     ruta_reporte_final = RAIZ_DATASET / "reporte_curaduria.json"
 
-    # 1. Promover los 3 dominios desde `_plagia_curado/` hacia la raíz de `dataset/`
+    # 1. Promover los 3 dominios desde `_fitovigia_curado/` hacia la raíz de `dataset/`
     for nombre_dom in ["01_dron_dosel_cls", "02_campo_hoja_cls", "03_deteccion_plagas_yolo"]:
         origen = RAIZ_CURADO_TEMP / nombre_dom
         destino = RAIZ_DATASET / nombre_dom
@@ -154,7 +154,7 @@ def consolidar_y_limpiar_dataset() -> dict:
                 lineas_nuevas.append(linea)
         ruta_yaml.write_text("\n".join(lineas_nuevas) + "\n", encoding="utf-8")
 
-    # 4. Eliminar `_archivo_crudo/`, `_plagia_curado/` y las 7 carpetas antiguas en inglés
+    # 4. Eliminar `_archivo_crudo/`, `_fitovigia_curado/` y las 7 carpetas antiguas en inglés
     print("[4/5] Eliminando _archivo_crudo/ y las 7 carpetas antiguas en inglés...")
     carpetas_eliminadas: list[str] = []
     if RAIZ_ARCHIVO_TEMP.exists():
@@ -162,7 +162,7 @@ def consolidar_y_limpiar_dataset() -> dict:
         carpetas_eliminadas.append("_archivo_crudo")
     if RAIZ_CURADO_TEMP.exists():
         shutil.rmtree(RAIZ_CURADO_TEMP)
-        carpetas_eliminadas.append("_plagia_curado")
+        carpetas_eliminadas.append("_fitovigia_curado")
 
     for nombre_carpeta in CARPETAS_INGLES_ANTIGUAS:
         ruta_antigua = RAIZ_DATASET / nombre_carpeta

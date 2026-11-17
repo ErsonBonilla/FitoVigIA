@@ -9,11 +9,11 @@ import 'theme/app_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const AplicacionEmpresarialPlagIA());
+  runApp(const AplicacionEmpresarialFitoVigIA());
 }
 
-class AplicacionEmpresarialPlagIA extends StatelessWidget {
-  const AplicacionEmpresarialPlagIA({super.key});
+class AplicacionEmpresarialFitoVigIA extends StatelessWidget {
+  const AplicacionEmpresarialFitoVigIA({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,19 +21,19 @@ class AplicacionEmpresarialPlagIA extends StatelessWidget {
       title: ConfiguracionApp.tituloApp,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const ContenedorInicioPlagIA(),
+      home: const ContenedorInicioFitoVigIA(),
     );
   }
 }
 
-class ContenedorInicioPlagIA extends StatefulWidget {
-  const ContenedorInicioPlagIA({super.key});
+class ContenedorInicioFitoVigIA extends StatefulWidget {
+  const ContenedorInicioFitoVigIA({super.key});
 
   @override
-  State<ContenedorInicioPlagIA> createState() => _EstadoContenedorInicioPlagIA();
+  State<ContenedorInicioFitoVigIA> createState() => _EstadoContenedorInicioFitoVigIA();
 }
 
-class _EstadoContenedorInicioPlagIA extends State<ContenedorInicioPlagIA> {
+class _EstadoContenedorInicioFitoVigIA extends State<ContenedorInicioFitoVigIA> {
   final ServicioInferenciaBorde _servicioBorde = ServicioInferenciaBorde();
   final ServicioGps _servicioGps = ServicioGps();
   final ServicioSincronizacionOffline _servicioSincronizacion =
@@ -71,7 +71,7 @@ class _EstadoContenedorInicioPlagIA extends State<ContenedorInicioPlagIA> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PlagIA Tolima Empresarial'),
+        title: const Text('FitoVigIA Tolima Empresarial'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -123,4 +123,4 @@ class _EstadoContenedorInicioPlagIA extends State<ContenedorInicioPlagIA> {
   }
 }
 
-typedef PlagIAEnterpriseApp = AplicacionEmpresarialPlagIA;
+typedef FitoVigIAEnterpriseApp = AplicacionEmpresarialFitoVigIA;

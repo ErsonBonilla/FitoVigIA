@@ -9,7 +9,7 @@ Aplica la Regla de Oro:
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.core.database import (
@@ -17,6 +17,7 @@ from backend.core.database import (
     LoteORM,
     obtener_sesion_bd,
 )
+from backend.core.storage import sanitizar_identificador_ruta
 from backend.schemas.api_schemas import RespuestaMapaCalorGeoJSON
 from engine.config import AVISO_AGRONOMICO
 from engine.geospatial import (
@@ -28,12 +29,17 @@ router = APIRouter(tags=["Mapas de Calor Geoespaciales (GeoJSON / PostGIS)"])
 
 
 def _generar_mapa_calor_lote(id_lote_o_finca: str, sesion: Session) -> RespuestaMapaCalorGeoJSON:
+    try:
+        id_seguro = sanitizar_identificador_ruta(id_lote_o_finca)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     lote = (
         sesion.query(LoteORM)
-        .filter((LoteORM.id == id_lote_o_finca) | (LoteORM.finca_id == id_lote_o_finca))
+        .filter((LoteORM.id == id_seguro) | (LoteORM.finca_id == id_seguro))
         .first()
     )
-    id_lote = lote.id if lote is not None else id_lote_o_finca
+    id_lote = lote.id if lote is not None else id_seguro
     municipio = lote.municipio if lote is not None else "El Espinal"
 
     detecciones = (

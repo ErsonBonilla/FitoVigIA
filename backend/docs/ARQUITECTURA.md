@@ -1,8 +1,8 @@
-# Especificación de Arquitectura Empresarial - PlagIA
+# Especificación de Arquitectura Empresarial - FitoVigIA
 
 ## 1. Visión de Componentes y Capas
 
-La plataforma **PlagIA** sigue una arquitectura hexagonal y de microservicios contenerizados, dividida en tres subsistemas desacoplados:
+La plataforma **FitoVigIA** sigue una arquitectura hexagonal y de microservicios contenerizados, dividida en tres subsistemas desacoplados:
 
 1. **`engine/` (Subsistema de Inteligencia Artificial, MLOps y Geoprocesamiento):**
    * Responsable de la ingesta gobernada desde `dataset/`, preprocesamiento radiométrico con OpenCV (`CLAHE`) y Albumentations, entrenamiento con **PyTorch (AMP FP16)** y **Ultralytics YOLO**, seguimiento en **MLflow**, exportación/cuantización **ONNX** y generación de **Mapas de Calor Geoespaciales** con Rasterio y GeoPandas.
@@ -40,7 +40,7 @@ La plataforma **PlagIA** sigue una arquitectura hexagonal y de microservicios co
 1. **En el lote arrocero (Sin conexión a internet):**
    * El agricultor o monitor fitosanitario toma una fotografía de la hoja de arroz con `FieldScannerScreen`.
    * `GpsService` obtiene latitud, longitud y precisión en metros directamente del chip GPS del dispositivo.
-   * `EdgeInferenceService` ejecuta el modelo cuantizado `assets/models/plagia_mobile_int8.onnx` localmente en menos de 80 ms, entregando diagnóstico, confianza y recomendación de manejo inmediato.
+   * `EdgeInferenceService` ejecuta el modelo cuantizado `assets/models/fitovigia_mobile_int8.onnx` localmente en menos de 80 ms, entregando diagnóstico, confianza y recomendación de manejo inmediato.
    * `OfflineSyncService` guarda el registro en la tabla local SQLite `inspection_queue` con estado `PENDING_SYNC`.
 2. **En el casco urbano o campamento (Con conexión Wi-Fi / 4G):**
    * `OfflineSyncService` empaqueta los registros pendientes y los envía a `POST /api/v1/sync/batch`.

@@ -82,8 +82,9 @@ export function renderizarIslaMapaViewer(urlApiBase = "http://localhost:8000/api
       </div>
       <div class="controles-isla">
         <select id="selector-finca-mapa" aria-label="Seleccionar Finca o Lote">
-          <option value="LOTE-ESPINAL-01">FINCA-TOL-01 · Lote Las Acacias (El Espinal)</option>
+          <option value="LOTE-IBAGUE-01">FINCA-TOL-03 · Meseta de Ibagué (Ibagué)</option>
           <option value="LOTE-SALDANA-01">FINCA-TOL-02 · Lote El Canal (Saldaña)</option>
+          <option value="LOTE-ESPINAL-01">FINCA-TOL-01 · Lote Las Acacias (El Espinal)</option>
         </select>
         <button type="button" id="btn-sincronizar-mapa" class="boton-primario">
           Cargar Capa GeoJSON en Vivo
@@ -107,6 +108,15 @@ export function renderizarIslaMapaViewer(urlApiBase = "http://localhost:8000/api
         const celdasBase = ${datosInicialesJson};
         const urlApi = "${urlApiBase}";
 
+        function escaparHtmlCliente(valor) {
+          return String(valor == null ? "" : valor)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
         function estiloGradCamPorSeveridad(sev) {
           if (sev >= 0.65) {
             return { color: "#EF476F", fillColor: "#EF476F", fillOpacity: 0.9, badge: "Plaga Detectada" };
@@ -122,7 +132,7 @@ export function renderizarIslaMapaViewer(urlApiBase = "http://localhost:8000/api
           const mapa = L.map("contenedor-leaflet-tolima").setView([4.1486, -74.8830], 14);
           L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
-            attribution: "&copy; OpenStreetMap | PlagIA Tolima Grad-CAM"
+            attribution: "&copy; OpenStreetMap | FitoVigIA Tolima Grad-CAM"
           }).addTo(mapa);
 
           const capaGrupo = L.layerGroup().addTo(mapa);
@@ -140,10 +150,10 @@ export function renderizarIslaMapaViewer(urlApiBase = "http://localhost:8000/api
               }).addTo(capaGrupo);
 
               circulo.bindPopup(
-                "<strong>" + c.estadoBadge + " · " + c.nombreComun + "</strong><br/>" +
-                "Sector: " + c.sector + "<br/>" +
-                "Índice de Severidad: <b>" + c.indiceSeveridad.toFixed(2) + "</b><br/>" +
-                "<em>MIP: " + c.recomendacionMip + "</em>"
+                "<strong>" + escaparHtmlCliente(c.estadoBadge) + " · " + escaparHtmlCliente(c.nombreComun) + "</strong><br/>" +
+                "Sector: " + escaparHtmlCliente(c.sector) + "<br/>" +
+                "Índice de Severidad: <b>" + Number(c.indiceSeveridad).toFixed(2) + "</b><br/>" +
+                "<em>MIP: " + escaparHtmlCliente(c.recomendacionMip) + "</em>"
               );
             });
           }
@@ -178,9 +188,9 @@ export function renderizarIslaMapaViewer(urlApiBase = "http://localhost:8000/api
                     const p = feature.properties || {};
                     const est = estiloGradCamPorSeveridad(p.severity_index || 0.1);
                     layer.bindPopup(
-                      "<strong>" + est.badge + " · " + (p.nombre_comun || p.disease_label) + "</strong><br/>" +
-                      "Severidad: " + p.severity_index + "<br/>" +
-                      "<em>" + (p.recomendacion_mip || "") + "</em>"
+                      "<strong>" + escaparHtmlCliente(est.badge) + " · " + escaparHtmlCliente(p.nombre_comun || p.disease_label) + "</strong><br/>" +
+                      "Severidad: " + escaparHtmlCliente(p.severity_index) + "<br/>" +
+                      "<em>" + escaparHtmlCliente(p.recomendacion_mip || "") + "</em>"
                     );
                   }
                 }).addTo(capaGrupo);

@@ -1,4 +1,4 @@
-package co.plagia.tolima.plagia_mobile
+package co.fitovigia.tolima.fitovigia_mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

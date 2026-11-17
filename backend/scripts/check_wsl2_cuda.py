@@ -28,7 +28,7 @@ def run_diagnostics() -> dict:
     }
 
     print("=" * 76)
-    print(" PLAGIA ENTERPRISE - DIAGNOSTICO DE ENTORNO UV + PYTHON 3.12 + CUDA")
+    print(" FITOVIGIA ENTERPRISE - DIAGNOSTICO DE ENTORNO UV + PYTHON 3.12 + CUDA")
     print("=" * 76)
     print(f"Python Version : {report['python_version']}")
     print(f"Plataforma     : {report['platform']}")

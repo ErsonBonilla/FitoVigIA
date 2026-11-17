@@ -1,5 +1,5 @@
-name: plagia_mobile
-description: "PlagIA Enterprise - Aplicacion Movil Offline-First (Edge-AI & Mapas de Calor) para el Cultivo de Arroz en el Tolima."
+name: fitovigia_mobile
+description: "FitoVigIA Enterprise - Aplicacion Movil Offline-First (Edge-AI & Mapas de Calor) para el Cultivo de Arroz en el Tolima."
 publish_to: 'none'
 version: 1.0.0+1
 

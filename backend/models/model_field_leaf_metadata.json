@@ -18,8 +18,8 @@
     "dano_barrenador_tallo",
     "dano_insecto_foliar"
   ],
-  "server_onnx_path": "plagia_campo_hoja_fp32.onnx",
-  "mobile_onnx_path": "plagia_campo_hoja_int8.onnx",
+  "server_onnx_path": "fitovigia_campo_hoja_fp32.onnx",
+  "mobile_onnx_path": "fitovigia_campo_hoja_int8.onnx",
   "server_size_mb": 16.557,
   "mobile_size_mb": 4.512,
   "compression_ratio": 3.67,
@@ -102,5 +102,5 @@
       "recomendacion_mip": "Liberación biológica de Trichogramma exiguum o Telenomus rowani y destrucción de socas post-cosecha."
     }
   },
-  "disclaimer": "AVISO AGRONOMICO: PlagIA es una plataforma empresarial de soporte a la decisión para Manejo Integrado de Plagas (MIP) en arroz. Ninguna alerta automatizada sustituye el concepto técnico ni la prescripción de un Ingeniero Agrónomo con matrícula profesional vigente conforme a las regulaciones del ICA."
+  "disclaimer": "AVISO AGRONOMICO: FitoVigIA es una plataforma empresarial de soporte a la decisión para Manejo Integrado de Plagas (MIP) en arroz. Ninguna alerta automatizada sustituye el concepto técnico ni la prescripción de un Ingeniero Agrónomo con matrícula profesional vigente conforme a las regulaciones del ICA."
 }

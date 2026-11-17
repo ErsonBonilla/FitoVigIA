@@ -1,0 +1,31 @@
+title = "FitoVigIA Enterprise - Configuración Gitleaks (OWASP ASVS V2 / V14)"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "fitovigia-jwt-hardcoded-token"
+description = "Detecta tokens JWT firmados hardcodeados en el código fuente"
+regex = '''eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'''
+tags = ["jwt", "secret", "fitovigia"]
+
+[[rules]]
+id = "fitovigia-private-key-pem"
+description = "Detecta claves privadas PEM o RSA expuestas"
+regex = '''-----BEGIN (RSA|EC|DSA|OPENSSH|PRIVATE) KEY-----'''
+tags = ["key", "pem", "fitovigia"]
+
+[allowlist]
+description = "Archivos de plantilla de ejemplo, pruebas automatizadas y artefactos binarios de modelos"
+paths = [
+    '''backend/\.env\.example$''',
+    '''docker-compose\.yml$''',
+    '''backend/core/config\.py$''',
+    '''backend/core/security\.py$''',
+    '''backend/schemas/api_schemas\.py$''',
+    '''backend/tests/test_fitovigia_platform\.py$''',
+    '''\.onnx$''',
+    '''\.pth$''',
+    '''uv\.lock$''',
+    '''pubspec\.lock$''',
+]

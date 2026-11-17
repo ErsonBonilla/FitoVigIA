@@ -1,0 +1,33 @@
+# ============================================================================
+# FITOVIGIA ENTERPRISE - LEFTHOOK DEVSECOPS HOOKS (OWASP / ASVS / GITLEAKS)
+# ============================================================================
+
+pre-commit:
+  parallel: true
+  commands:
+    gitleaks-staged:
+      run: gitleaks protect --staged --redact --verbose --config .gitleaks.toml
+    backend-ruff-security:
+      root: "backend/"
+      run: ruff check api core services workers main.py
+    backend-bandit-sast:
+      root: "backend/"
+      run: .venv/Scripts/python.exe -m bandit -c pyproject.toml -r api core services workers main.py -q
+    frontend-lint-check:
+      root: "frontend/"
+      run: deno task lint && deno task check
+    mobile-dart-analyze:
+      root: "mobile/"
+      run: dart analyze
+
+pre-push:
+  parallel: false
+  commands:
+    gitleaks-repo:
+      run: gitleaks detect --source . --config .gitleaks.toml --no-banner
+    frontend-tests:
+      root: "frontend/"
+      run: deno task test
+    backend-owasp-tests:
+      root: "backend/"
+      run: .venv/Scripts/python.exe -m pytest tests/test_fitovigia_platform.py -k test_seguridad_owasp_asvs_portswigger -q

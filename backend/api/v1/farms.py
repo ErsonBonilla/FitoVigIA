@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.core.database import FincaORM, LoteORM, obtener_sesion_bd
+from backend.core.storage import sanitizar_identificador_ruta
 from backend.schemas.api_schemas import EsquemaResumenLote
 
 router = APIRouter(prefix="/farms", tags=["Fincas y Lotes Arroceros (Tolima)"])
@@ -57,9 +58,14 @@ def listar_lotes(sesion: Session = Depends(obtener_sesion_bd)):
 
 @router.get("/lots/{lot_id}", response_model=EsquemaResumenLote)
 def obtener_detalle_lote(lot_id: str, sesion: Session = Depends(obtener_sesion_bd)):
-    lote = sesion.query(LoteORM).filter(LoteORM.id == lot_id).first()
+    try:
+        id_seguro = sanitizar_identificador_ruta(lot_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    lote = sesion.query(LoteORM).filter(LoteORM.id == id_seguro).first()
     if lote is None:
-        raise HTTPException(status_code=404, detail=f"No existe el lote '{lot_id}'")
+        raise HTTPException(status_code=404, detail="No existe el lote solicitado.")
     return EsquemaResumenLote(
         id=lote.id,
         farm_id=lote.finca_id,

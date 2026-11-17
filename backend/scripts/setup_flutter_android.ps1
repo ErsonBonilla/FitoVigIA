@@ -1,10 +1,10 @@
 # ============================================================================
-# PLAGIA ENTERPRISE - CONFIGURACION FLUTTER + ANDROID STUDIO (WINDOWS)
+# FITOVIGIA ENTERPRISE - CONFIGURACION FLUTTER + ANDROID STUDIO (WINDOWS)
 # ============================================================================
 $ErrorActionPreference = "Continue"
 
 Write-Host "============================================================================" -ForegroundColor Cyan
-Write-Host " PlagIA Enterprise - Verificacion de Flutter 3.47+ y Android Studio SDK" -ForegroundColor Cyan
+Write-Host " FitoVigIA Enterprise - Verificacion de Flutter 3.47+ y Android Studio SDK" -ForegroundColor Cyan
 Write-Host "============================================================================" -ForegroundColor Cyan
 
 # Recargar PATH del registro de Windows en la sesion actual
@@ -31,5 +31,5 @@ Pop-Location
 
 Write-Host "`n============================================================================" -ForegroundColor Cyan
 Write-Host " Proyecto Flutter listo para abrir en Android Studio:" -ForegroundColor Green
-Write-Host "   Ruta: C:\Users\erson\Documents\Programación\ISIDEAD\PlagIA\mobile" -ForegroundColor White
+Write-Host "   Ruta: C:\Users\erson\Documents\Programación\Proyectos\ISIDEAD\FitoVigIA\mobile" -ForegroundColor White
 Write-Host "============================================================================" -ForegroundColor Cyan

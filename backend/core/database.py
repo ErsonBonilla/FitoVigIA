@@ -1,7 +1,7 @@
 """
 Capa de Persistencia Geoespacial y Relacional Dual bajo la Regla de Oro:
 - Motor Principal: PostgreSQL 16 + PostGIS 3.4 (`postgresql+psycopg2://...`)
-- Motor de Respaldo Conveniente: SQLite (`sqlite:///.../plagia_enterprise.db`)
+- Motor de Respaldo Conveniente: SQLite (`sqlite:///.../fitovigia_enterprise.db`)
 
 Todas las clases ORM, tablas (`fincas`, `lotes`, `detecciones_fitosanitarias`,
 `trabajos_ortomosaico`), columnas y estados internos (`PENDIENTE`, `PROCESANDO`,
@@ -12,6 +12,7 @@ y RFC 7946 GeoJSON se conservan en inglés por protocolo.
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone
 
 from sqlalchemy import (
@@ -29,6 +30,8 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sess
 
 from backend.core.config import configuracion
 from engine.config import ZONAS_ARROCERAS_TOLIMA
+
+logger = logging.getLogger("fitovigia.database")
 
 
 def construir_motor_bd_resiliente() -> tuple[Engine, str]:
@@ -56,11 +59,11 @@ def construir_motor_bd_resiliente() -> tuple[Engine, str]:
                 try:
                     conexion.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
                     conexion.commit()
-                except Exception:
-                    pass
+                except Exception as exc_ext:
+                    logger.debug("Extensión PostGIS omitida en validación inicial: %s", exc_ext)
             return motor_pg, "PostgreSQL/PostGIS (Principal)"
-        except Exception:
-            pass
+        except Exception as exc_pg:
+            logger.debug("Failover automático a SQLite local activado: %s", exc_pg)
 
     url_sqlite = (
         url_primaria if url_primaria.startswith("sqlite") else configuracion.sqlite_fallback_url

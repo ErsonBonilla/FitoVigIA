@@ -1,5 +1,5 @@
 """
-Motor Geoespacial de PlagIA Enterprise (Rasterio + GeoPandas + Shapely).
+Motor Geoespacial de FitoVigIA Enterprise (Rasterio + GeoPandas + Shapely).
 
 Aplica la Regla de Oro:
 - Lógica interna, etiquetas de patología (`sano`, `roya_parda`, `roya_amarilla`, etc.),
@@ -28,9 +28,42 @@ from shapely.geometry import Point, box
 from engine.config import (
     CATALOGO_AGRONOMICO,
     DIR_ARTEFACTOS,
+    ORIGEN_PREENTRENAMIENTO_PUBLICO,
+    PARAMETROS_UAV_LITERATURA,
     ZONAS_ARROCERAS_TOLIMA,
     normalizar_etiqueta_espanol,
 )
+
+
+def validar_parametros_vuelo_uav_rac100(
+    altitude_m: float = 25.0,
+    overlap_front_pct: float = 80.0,
+    overlap_side_pct: float = 75.0,
+    sensor_width_mm: float = 13.2,
+    focal_length_mm: float = 8.8,
+    image_width_px: int = 4000,
+) -> dict:
+    """Valida los parámetros de captura aérea UAV (Variable Independiente X del diseño DEXPLOS).
+
+    Fundamentado en:
+    - Petro et al. (2018) y Rojas et al. (2018) [Mapeo aéreo de arroz con UAV en Colombia].
+    - Lin et al. (2025) y Qiang et al. (2025) [Detección de piricularia y plagas en arroz con UAV y YOLO].
+    - García Díaz y Quimbayo Castiblanco (2016) [Norma RAC 100 de la Aeronáutica Civil].
+    """
+    gsd_cm_px = round((altitude_m * sensor_width_mm) / ( max(focal_length_mm, 0.1) * max(image_width_px, 1) ) * 100.0, 3)
+    alt_ok = float(PARAMETROS_UAV_LITERATURA["altura_vuelo_min_m"]) <= altitude_m <= float(PARAMETROS_UAV_LITERATURA["altura_vuelo_max_m"])
+    ov_front_ok = float(PARAMETROS_UAV_LITERATURA["traslape_longitudinal_min_pct"]) <= overlap_front_pct <= float(PARAMETROS_UAV_LITERATURA["traslape_longitudinal_max_pct"])
+    ov_side_ok = float(PARAMETROS_UAV_LITERATURA["traslape_transversal_min_pct"]) <= overlap_side_pct <= float(PARAMETROS_UAV_LITERATURA["traslape_transversal_max_pct"])
+    gsd_ok = float(PARAMETROS_UAV_LITERATURA["gsd_min_cm_px"]) <= gsd_cm_px <= float(PARAMETROS_UAV_LITERATURA["gsd_max_cm_px"])
+
+    return {
+        "altitude_m": altitude_m,
+        "gsd_cm_px": gsd_cm_px,
+        "overlap_front_pct": overlap_front_pct,
+        "overlap_side_pct": overlap_side_pct,
+        "rac100_vlos_compliant": alt_ok,
+        "photogrammetry_valid": bool(alt_ok and ov_front_ok and ov_side_ok and gsd_ok),
+    }
 
 
 def crear_ortomosaico_geotiff_muestra(
@@ -206,6 +239,7 @@ def construir_geodataframe_mapa_calor(
                 "nivel_riesgo": info_kb["nivel_riesgo"],
                 "latitude": c_lat,
                 "longitude": c_lon,
+                "dataset_origin": item.get("dataset_origin", ORIGEN_PREENTRENAMIENTO_PUBLICO),
                 "recomendacion_mip": info_kb["recomendacion_mip"],
             }
         )
@@ -226,36 +260,49 @@ def exportar_artefactos_mapa_calor(
     cadena_geojson = gdf.to_json()
     ruta_geojson.write_text(cadena_geojson, encoding="utf-8")
 
-    fig, ax = plt.subplots(figsize=(8, 6.5))
+    fig, ax = plt.subplots(figsize=(9.6, 7.2), dpi=300)
     gdf.plot(
         column="severity_index",
         ax=ax,
         cmap="magma_r",
         vmin=0.0,
         vmax=1.0,
-        edgecolor="#1C1B1F",
-        linewidth=0.8,
+        edgecolor="#1C2833",
+        linewidth=1.2,
         legend=True,
-        legend_kwds={"label": "Espectro de Severidad Grad-CAM / Magma (0 = Baja, 1 = Crítica)"},
+        legend_kwds={
+            "label": "Índice de Severidad Fitosanitaria (0,00 = Vigor Sano | 1,00 = Foco Crítico)",
+            "shrink": 0.88,
+        },
     )
 
     for _, fila in gdf.iterrows():
         centroide = fila.geometry.centroid
+        etiqueta_corta = str(fila["disease_label"]).replace("_", " ").upper()
+        conf_pct = float(fila.get("confidence", 0.95)) * 100.0
         ax.annotate(
-            f"{fila['disease_label']}\n({fila['severity_index']:.2f})",
+            f"{fila['patch_id'].upper()}\n{etiqueta_corta}\nSev: {fila['severity_index']:.2f} ({conf_pct:.1f}%)",
             xy=(centroide.x, centroide.y),
             ha="center",
             va="center",
-            fontsize=7,
-            color="black",
-            bbox={"boxstyle": "round,pad=0.2", "fc": "white", "alpha": 0.75, "ec": "none"},
+            fontsize=8.2,
+            fontweight="bold",
+            color="#1C2833",
+            bbox={"boxstyle": "round,pad=0.32", "fc": "white", "alpha": 0.88, "ec": "#1B4F72", "lw": 0.9},
         )
 
-    ax.set_title(f"Mapa de Calor Fitosanitario - {lot_id} ({gdf['municipio'].iloc[0]})")
-    ax.set_xlabel("Longitud (EPSG:4326)")
-    ax.set_ylabel("Latitud (EPSG:4326)")
+    ax.set_title(
+        f"Mapa de Calor Fitosanitario Georreferenciado – {lot_id} ({gdf['municipio'].iloc[0]}, Tolima)",
+        fontsize=11.0,
+        fontweight="bold",
+        color="#1B4F72",
+        pad=12,
+    )
+    ax.set_xlabel("Longitud Geográfica WGS84 (EPSG:4326)", fontsize=9.5, fontweight="bold", color="#1C2833")
+    ax.set_ylabel("Latitud Geográfica WGS84 (EPSG:4326)", fontsize=9.5, fontweight="bold", color="#1C2833")
+    ax.grid(True, linestyle="--", alpha=0.35, color="#566573")
     fig.tight_layout()
-    fig.savefig(ruta_png, dpi=150)
+    fig.savefig(ruta_png, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
     total_celdas = len(gdf)

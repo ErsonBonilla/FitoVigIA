@@ -57,7 +57,7 @@ def exportar_pytorch_a_onnx(
 
     # Exportar e inferir cuantización en un directorio temporal ASCII para evitar el fallo
     # de C++ de ONNX Runtime en rutas de Windows con tildes (ej. 'Programación').
-    with tempfile.TemporaryDirectory(prefix="plagia_onnx_") as tmp_dir_str:
+    with tempfile.TemporaryDirectory(prefix="fitovigia_onnx_") as tmp_dir_str:
         tmp_dir = Path(tmp_dir_str)
         tmp_fp32 = tmp_dir / "model_fp32.onnx"
         tmp_int8 = tmp_dir / "model_int8.onnx"
